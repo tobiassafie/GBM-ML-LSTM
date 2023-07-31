@@ -1,10 +1,10 @@
 # GBM-ML
 
-GBM_download : script to download GBM data
+`GBM_download` : script to download GBM data
 
-GBM_read_processed: script to read the saved GBM data
+`GBM_read_processed`: script to read the saved GBM data
 
-In the Burst folder, each folder has the data from a particular burst (bnYYMMDD), within the folder the lightcurves and the SED associated to the detectors that have a >3sigma detection can be found in the files
+In `Burst`, each folder has the data from a particular burst (`bnYYMMDD`), the lightcurves and the SED associated to the detectors that have a >3sigma detection. 
 
  `lc_{burst}_{det}_{t90_start}_{t90}_{SNR}.txt `
 
