@@ -1,6 +1,6 @@
 # GBM-ML
 
-GBM_download : script to download GBM data \\
+GBM_download : script to download GBM data \n
 GBM_read_processed: script to read the saved GBM data
 
 In the Burst folder, the lightcurves and the SED associated to each lightcurve can be found in the files
