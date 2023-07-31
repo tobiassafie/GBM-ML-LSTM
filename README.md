@@ -4,8 +4,8 @@
 
 `GBM_read_processed`: script to read the saved GBM data
 
-In `Burst`, each folder has the data from a particular burst (`bnYYMMDD`), the lightcurves ( `lc_{burst}_{det}_{t90_start}_{t90}_{SNR}.txt `
-) and the SED (`spec_{burst}_{det}_{t90_start}_{t90}_{SNR}.txt `) associated to the detectors that have a >3sigma detection. 
+In `Burst`, each folder has the data from a particular burst (`bnYYMMDD`): the lightcurves and the SED  - `lc_{burst}_{det}_{t90_start}_{t90}_{SNR}.txt`
+and `spec_{burst}_{det}_{t90_start}_{t90}_{SNR}.txt` respectively - associated to the detectors that have a >3sigma detection. 
 
 Where:
 
