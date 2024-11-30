@@ -1,44 +1,40 @@
-import pandas as pd
+from sklearn.mixture import BayesianGaussianMixture
+from sklearn.manifold import TSNE
+from sklearn.ensemble import IsolationForest
+
+import torch
+
 import matplotlib.pyplot as plt
-import os, glob
 
-props = pd.DataFrame()
-for grb in os.listdir('Bursts'):
-  if not glob.glob('Bursts/'+grb+'/lc_'+grb+'_*.txt'): print(grb)
-  for lc_file in glob.glob('Bursts/'+grb+'/lc_'+grb+'_*.txt'):
-    lc = pd.read_csv(lc_file, delimiter=' ')
-    lc = lc.T.reset_index().rename(columns={'index': 'time', 0: 'count'})
-    lc['time'] = lc['time'].astype('float')
-    params = os.path.splitext(lc_file)[0].split('_')
-    det = params[2]
-    tstart = float(params[3])
-    tdur = float(params[4])
-    snr = float(params[5])
-    props = pd.concat([props, pd.DataFrame([[grb, det, snr, lc['time'].max()-lc['time'].min(), tdur,
-                                        lc['count'].min(), lc['count'].max(),
-                                        lc[(lc['time'] > tstart) & (lc['time'] < tstart+tdur)]['count'].min(),
-                                        lc[(lc['time'] > tstart) & (lc['time'] < tstart+tdur)]['count'].max(),
-                                        ]], columns=['name', 'detector', 'snr', 'lc_duration', 'burst_duration',
-                                                     'min_count', 'max_count', 'min_burst_count', 'max_burst_count'])
-                     ])
+latent_feats = torch.load('latent_feats.pt')
+latent_feats_np = latent_feats.numpy()
 
-pd.options.display.max_columns = None
-props.describe()
-props.groupby('name').ngroups #why 214 when 216 folders
-props.groupby('name')['detector'].count()
-props.groupby('name')['burst_duration'].unique().astype(float).idxmax() #longest burst
-props.groupby('name')['burst_duration'].unique().astype(float).idxmin() #shortest burst
-props.groupby('name')['max_burst_count'].max().idxmax() #brightest burst, any detector
-props.groupby('name')['max_burst_count'].max().idxmin() #faintest burst, any detector
-props.corr().abs()
+bgm = BayesianGaussianMixture(n_components=10).fit(latent_latent_feats_np)
+cluster_assignments = bgm.predict(latent_feats_np)
 
-len(os.listdir('Bursts'))
-# how renorm
-# feature dist and correlation
+# Apply t-SNE for dimensionality reduction
+tsne = TSNE(n_components=2, random_state=42)
+latent_feats_2d = tsne.fit_transform(latent_feats_np)
 
+# Fit Isolation Forest to find outliers
+iso_forest = IsolationForest(contamination=0.1, random_state=42)
+outlier_labels = iso_forest.fit_predict(latent_feats_np)
+
+# Visualize clusters and outliers
+plt.figure(figsize=(10, 8))
+plt.scatter(latent_feats_2d[:, 0], latent_feats_2d[:, 1], c=cluster_assignments, cmap='viridis', s=50, label='Clusters')
+outliers = latent_feats_2d[outlier_labels == -1]
+plt.scatter(outliers[:, 0], outliers[:, 1], c='red', s=50, label='Outliers')
+plt.colorbar()
+plt.title('Clusters and Outliers in Latent Space')
+plt.xlabel('t-SNE Component 1')
+plt.ylabel('t-SNE Component 2')
+plt.legend()
+plt.show()
+
+'''
 sed = pd.read_csv('sample_energy_lc.txt', delimiter=' ')
 sed = sed.T.reset_index().rename(columns = {'index':'wavelength', 0:'count'})
 plt.plot(sed['wavelength'].astype('float'), sed['count'].astype('float'))
+'''
 
-# reduce feature
-# use full time and energy decomposition?
