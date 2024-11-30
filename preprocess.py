@@ -48,3 +48,4 @@ for grb in os.listdir('Bursts'):
     lcs = pd.concat([lcs, lc])
 
 lcs.to_csv('lcs.csv', index=False)
+

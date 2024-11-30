@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import math
-
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -10,7 +10,9 @@ from torch.utils.data import Dataset, DataLoader
 lcs = pd.read_csv('lcs.csv')
 channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b1', 'b2']
 
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+# Fill missing channels with zeros
+for channel in channels:
+  lcs[channel].fillna(0.0, inplace=True)
 
 def rescale_data(df, channels, scaler_type='minmax'):
     if scaler_type == 'minmax':
@@ -25,16 +27,15 @@ def rescale_data(df, channels, scaler_type='minmax'):
 
 lcs = rescale_data(lcs, channels, scaler_type='minmax')
 
-# Fill missing channels with zeros
-for channel in channels:
-  lcs[channel].fillna(0.0, inplace=True)
-
 time_series_list = []
 grouped = lcs.groupby('burst')
 for burst, group in grouped:
     time_series_data = group[channels].values
     time_series_tensor = torch.tensor(time_series_data, dtype=torch.float32)
     time_series_list.append(time_series_tensor)
+
+# Padding with zeros
+time_series_list = nn.utils.rnn.pad_sequence(time_series_list, batch_first=True, padding_value=0.0)
 
 class TimeSeriesDataset(Dataset):
     def __init__(self, time_series_list):
@@ -45,11 +46,6 @@ class TimeSeriesDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.time_series_list[idx]
-
-# Pad sequences to the same length
-def collate_fn(batch):
-    batch = nn.utils.rnn.pad_sequence(batch, batch_first=True, padding_value=0.0)
-    return batch
 
 # Define the Positional Encoding Class
 class PositionalEncoding(nn.Module):
@@ -115,15 +111,14 @@ model_dim = 32
 num_heads = 4
 num_layers = 2
 batch_size = 16
-num_epochs = 20
+num_epochs = 10
 learning_rate = 0.001
 
 # Initialize the autoencoder
 autoencoder = TransformerAutoencoder(input_dim, model_dim, num_heads, num_layers)
 
-# Create the dataset and dataloader
 dataset = TimeSeriesDataset(time_series_list)
-dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn)
+dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # Define the loss function and optimizer
 criterion = nn.MSELoss()
@@ -145,6 +140,10 @@ for epoch in range(num_epochs):
 
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
+torch.save(autoencoder, 'autoencoder.pt')
+
+# Inference loop
+autoencoder = torch.load('autoencoder.pt', weights_only=False) 
 latent_feats = []
 for batch in dataloader:
     batch = batch.permute(1, 0, 2)
@@ -154,4 +153,3 @@ for batch in dataloader:
 latent_feats = torch.cat(latent_feats, dim=1)
 
 torch.save(latent_feats, 'latent_feats.pt')
-

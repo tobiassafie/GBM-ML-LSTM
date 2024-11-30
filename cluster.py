@@ -1,8 +1,7 @@
+import pandas as pd
 from sklearn.mixture import BayesianGaussianMixture
 from sklearn.manifold import TSNE
 from sklearn.ensemble import IsolationForest
-
-import torch
 
 import matplotlib.pyplot as plt
 
