@@ -31,9 +31,9 @@ props.groupby('name')['burst_duration'].unique().astype(float).idxmax() #longest
 props.groupby('name')['burst_duration'].unique().astype(float).idxmin() #shortest burst
 props.groupby('name')['max_burst_count'].max().idxmax() #brightest burst, any detector
 props.groupby('name')['max_burst_count'].max().idxmin() #faintest burst, any detector
-props.corr().abs() #relation between min burst count and max (burst) count. interesting
+props.corr(numeric_only=True).abs() #relation between min burst count and max (burst) count. interesting
 
-channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b1', 'b2']
+channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b0', 'b1']
 
 lcs = pd.DataFrame()
 for grb in os.listdir('Bursts'):
@@ -49,3 +49,8 @@ for grb in os.listdir('Bursts'):
 
 lcs.to_csv('lcs.csv', index=False)
 
+'''
+sed = pd.read_csv('sample_energy_lc.txt', delimiter=' ')
+sed = sed.T.reset_index().rename(columns = {'index':'wavelength', 0:'count'})
+plt.plot(sed['wavelength'].astype('float'), sed['count'].astype('float'))
+'''

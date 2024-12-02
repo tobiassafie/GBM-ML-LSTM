@@ -1,39 +1,39 @@
-import pandas as pd
+import numpy as np 
+import matplotlib.pyplot as plt
 from sklearn.mixture import BayesianGaussianMixture
 from sklearn.manifold import TSNE
 from sklearn.ensemble import IsolationForest
+from sklearn.impute import SimpleImputer
 
-import matplotlib.pyplot as plt
+latent_feats = np.load('latent_feats.npy')
+burst_list = np.load('burst_list.npy')
 
-latent_feats = torch.load('latent_feats.pt')
-latent_feats_np = latent_feats.numpy()
-
-bgm = BayesianGaussianMixture(n_components=10).fit(latent_latent_feats_np)
-cluster_assignments = bgm.predict(latent_feats_np)
+# Fit Bayesian Gaussian Mixture Model
+bgm = BayesianGaussianMixture(n_components=10).fit(latent_feats)
+cluster_assignments = bgm.predict(latent_feats)
 
 # Apply t-SNE for dimensionality reduction
-tsne = TSNE(n_components=2, random_state=42)
-latent_feats_2d = tsne.fit_transform(latent_feats_np)
+tsne = TSNE(n_components=2)
+latent_feats_2d = tsne.fit_transform(latent_feats)
 
 # Fit Isolation Forest to find outliers
-iso_forest = IsolationForest(contamination=0.1, random_state=42)
-outlier_labels = iso_forest.fit_predict(latent_feats_np)
+iso_forest = IsolationForest()
+outlier_labels = iso_forest.fit_predict(latent_feats)
 
 # Visualize clusters and outliers
 plt.figure(figsize=(10, 8))
-plt.scatter(latent_feats_2d[:, 0], latent_feats_2d[:, 1], c=cluster_assignments, cmap='viridis', s=50, label='Clusters')
+for cluster in np.unique(cluster_assignments):
+    cluster_points = latent_feats_2d[cluster_assignments == cluster]
+    if not cluster_points.size == 0:
+        plt.scatter(cluster_points[:, 0], cluster_points[:, 1], label=f'Cluster {cluster}', s=5)
 outliers = latent_feats_2d[outlier_labels == -1]
-plt.scatter(outliers[:, 0], outliers[:, 1], c='red', s=50, label='Outliers')
-plt.colorbar()
+plt.scatter(outliers[:, 0], outliers[:, 1], c='red', s=5, label='Outliers')
 plt.title('Clusters and Outliers in Latent Space')
 plt.xlabel('t-SNE Component 1')
 plt.ylabel('t-SNE Component 2')
 plt.legend()
 plt.show()
 
-'''
-sed = pd.read_csv('sample_energy_lc.txt', delimiter=' ')
-sed = sed.T.reset_index().rename(columns = {'index':'wavelength', 0:'count'})
-plt.plot(sed['wavelength'].astype('float'), sed['count'].astype('float'))
-'''
-
+# Identify and print burst IDs of outliers
+outlier_burst_ids = burst_list[outlier_labels == -1]
+print("Burst IDs of outliers:", outlier_burst_ids)

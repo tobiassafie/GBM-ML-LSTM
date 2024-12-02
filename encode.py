@@ -1,51 +1,54 @@
+import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import math
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
+from sklearn.preprocessing import StandardScaler
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 
 lcs = pd.read_csv('lcs.csv')
-channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b1', 'b2']
+channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b0', 'b1']
 
 # Fill missing channels with zeros
 for channel in channels:
-  lcs[channel].fillna(0.0, inplace=True)
-
-def rescale_data(df, channels, scaler_type='minmax'):
-    if scaler_type == 'minmax':
-        scaler = MinMaxScaler()
-    elif scaler_type == 'standard':
-        scaler = StandardScaler()
-    else:
-        raise ValueError("scaler_type must be 'minmax' or 'standard'")
-    
-    df[channels] = scaler.fit_transform(df[channels])
-    return df
-
-lcs = rescale_data(lcs, channels, scaler_type='minmax')
+    lcs[channel].fillna(0.0, inplace=True)
+'''    
+    missing_indices = lcs[channel].isnull()  
+    num_missing = missing_indices.sum()
+    noise = np.random.normal(loc=lcs[channel].mean(), scale=lcs[channel].std(), size=num_missing)  
+    lcs.loc[missing_indices, channel] = noise  
+''' 
 
 time_series_list = []
+burst_ids = []
 grouped = lcs.groupby('burst')
 for burst, group in grouped:
     time_series_data = group[channels].values
     time_series_tensor = torch.tensor(time_series_data, dtype=torch.float32)
     time_series_list.append(time_series_tensor)
+    burst_ids.append(burst)
 
 # Padding with zeros
 time_series_list = nn.utils.rnn.pad_sequence(time_series_list, batch_first=True, padding_value=0.0)
 
+# Normalize the light curves
+scaler = StandardScaler()
+time_series_list_2d = time_series_list.reshape(time_series_list.shape[0], -1)
+time_series_list_2d = scaler.fit_transform(time_series_list_2d)
+time_series_list = time_series_list_2d.reshape(time_series_list.shape)
+
 class TimeSeriesDataset(Dataset):
-    def __init__(self, time_series_list):
+    def __init__(self, time_series_list, burst_ids):
         self.time_series_list = time_series_list
+        self.burst_ids = burst_ids
 
     def __len__(self):
         return len(self.time_series_list)
 
     def __getitem__(self, idx):
-        return self.time_series_list[idx]
+        return self.time_series_list[idx], self.burst_ids[idx]
 
 # Define the Positional Encoding Class
 class PositionalEncoding(nn.Module):
@@ -110,26 +113,27 @@ input_dim = 14
 model_dim = 32
 num_heads = 4
 num_layers = 2
-batch_size = 16
+batch_size = 32
 num_epochs = 10
 learning_rate = 0.001
+dropout = 0.1
 
 # Initialize the autoencoder
-autoencoder = TransformerAutoencoder(input_dim, model_dim, num_heads, num_layers)
+autoencoder = TransformerAutoencoder(input_dim, model_dim, num_heads, num_layers, dropout=dropout)
 
-dataset = TimeSeriesDataset(time_series_list)
+dataset = TimeSeriesDataset(time_series_list, burst_ids)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # Define the loss function and optimizer
 criterion = nn.MSELoss()
 optimizer = optim.Adam(autoencoder.parameters(), lr=learning_rate)
 
-# Training loop
+# Training 
 for epoch in range(num_epochs):
-    for batch in dataloader:
+    for batch_idx, (batch, bursts) in enumerate(dataloader):
         # Original shape of batch: (batch_size, sequence_length, input_dim)
         # Permute to shape: (sequence_length, batch_size, input_dim)
-        batch = batch.permute(1, 0, 2)
+        batch = batch.permute(1, 0, 2).float()
         reconstructed, latent = autoencoder(batch)
         loss = criterion(reconstructed, batch)
 
@@ -142,14 +146,18 @@ for epoch in range(num_epochs):
 
 torch.save(autoencoder, 'autoencoder.pt')
 
-# Inference loop
-autoencoder = torch.load('autoencoder.pt', weights_only=False) 
-latent_feats = []
-for batch in dataloader:
-    batch = batch.permute(1, 0, 2)
+#torch.load('autoencoder_b16_l0.0001_e50_d0.1.pt', weights_only=False, map_location=torch.device('cpu'))
+
+# Inference 
+latent_feats = np.empty((np.shape(time_series_list)[1], 0, model_dim))
+burst_list = np.empty((0,))
+for batch_idx, (batch, bursts) in enumerate(dataloader):
+    batch = batch.permute(1, 0, 2).float()
     reconstructed, latent = autoencoder(batch)
-    latent_feats.append(latent)
+    latent_feats = np.concatenate([latent_feats, latent.detach().numpy()], axis=1)
+    burst_list = np.concatenate([burst_list, bursts])
 
-latent_feats = torch.cat(latent_feats, dim=1)
+latent_feats = latent_feats.reshape(-1, latent_feats.shape[1])
+np.save('latent_feats.npy', latent_feats)
+np.save('burst_list.npy', burst_list)
 
-torch.save(latent_feats, 'latent_feats.pt')
