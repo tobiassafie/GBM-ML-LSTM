@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import math
 
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -11,15 +11,12 @@ from torch.utils.data import Dataset, DataLoader
 lcs = pd.read_csv('lcs.csv')
 channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b0', 'b1']
 
-# Fill missing channels with zeros
-for channel in channels:
-    lcs[channel].fillna(0.0, inplace=True)
-'''    
+# Fill missing channels with zeros/noise
+for channel in channels: 
     missing_indices = lcs[channel].isnull()  
     num_missing = missing_indices.sum()
     noise = np.random.normal(loc=lcs[channel].mean(), scale=lcs[channel].std(), size=num_missing)  
-    lcs.loc[missing_indices, channel] = noise  
-''' 
+    lcs.loc[missing_indices, channel] = noise   
 
 time_series_list = []
 burst_ids = []
@@ -70,7 +67,10 @@ class PositionalEncoding(nn.Module):
 class TransformerEncoder(nn.Module):
     def __init__(self, input_dim, model_dim, num_heads, num_layers, dropout=0.1):
         super(TransformerEncoder, self).__init__()
-        self.embedding = nn.Linear(input_dim, model_dim)
+        self.embedding = nn.Sequential(
+            nn.Linear(input_dim, model_dim),
+            nn.ReLU()  
+        )
         self.positional_encoding = PositionalEncoding(model_dim)
         encoder_layer = nn.TransformerEncoderLayer(d_model=model_dim, nhead=num_heads, dropout=dropout)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
@@ -94,39 +94,67 @@ class TransformerDecoder(nn.Module):
         output = self.output_layer(output)
         return output
 
+# Define the Compression Neural Network
+class IntermediateNetwork(nn.Module):
+    def __init__(self, latent_dim, reduced_dim, sequence_length):
+        super(IntermediateNetwork, self).__init__()
+        self.reduce = nn.Sequential(
+            nn.Linear(sequence_length * latent_dim, reduced_dim),
+            nn.ReLU()  
+        )
+        self.expand = nn.Sequential(
+            nn.Linear(reduced_dim, sequence_length * latent_dim),
+            nn.ReLU() 
+        )
+
+    def forward(self, x):
+        # Reduce dimensionality
+        org_shape = x.size()
+        x = x.reshape(x.size(1), -1)  # Reshape to (batch_size, sequence_length * latent_dim)
+        reduced_x = self.reduce(x)
+
+        # Expand dimensionality
+        expanded_x = self.expand(reduced_x)
+        expanded_x = expanded_x.reshape(org_shape)  # Reshape back
+
+        return expanded_x, reduced_x 
+    
 # Define the Autoencoder
 class TransformerAutoencoder(nn.Module):
-    def __init__(self, input_dim, model_dim, num_heads, num_layers, dropout=0.1):
+    def __init__(self, input_dim, model_dim, num_heads, num_layers, sequence_length, reduced_dim, dropout=0.1):  
         super(TransformerAutoencoder, self).__init__()
         self.encoder = TransformerEncoder(input_dim, model_dim, num_heads, num_layers, dropout)
-        self.decoder = TransformerDecoder(model_dim, input_dim, num_heads, num_layers, dropout)
+        self.intermediate_network = IntermediateNetwork(model_dim, reduced_dim, sequence_length)
+        self.decoder = TransformerDecoder(model_dim, input_dim, num_heads, num_layers, dropout)  
 
     def forward(self, src):
         memory = self.encoder(src)
-        tgt = self.encoder.embedding(src)
-        tgt = self.encoder.positional_encoding(tgt)
-        output = self.decoder(tgt, memory)
-        return output, memory
-
+        expanded_latent, reduced_latent = self.intermediate_network(memory)  
+        tgt = self.encoder.embedding(src)  
+        tgt = self.encoder.positional_encoding(tgt)  
+        output = self.decoder(tgt, expanded_latent)  
+        return output, reduced_latent  # Return output and reduced latent    
+    
 # Parameters
 input_dim = 14
 model_dim = 32
 num_heads = 4
 num_layers = 2
+reduced_dim = 1024
 batch_size = 32
-num_epochs = 10
-learning_rate = 0.001
+num_epochs = 50
+learning_rate = 0.0001
 dropout = 0.1
-
-# Initialize the autoencoder
-autoencoder = TransformerAutoencoder(input_dim, model_dim, num_heads, num_layers, dropout=dropout)
+sequence_length = np.shape(time_series_list)[1]
+# Define the loss function and optimizer
+criterion = nn.MSELoss()
+optimizer = optim.Adam(autoencoder.parameters(), lr=learning_rate)
 
 dataset = TimeSeriesDataset(time_series_list, burst_ids)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
-# Define the loss function and optimizer
-criterion = nn.MSELoss()
-optimizer = optim.Adam(autoencoder.parameters(), lr=learning_rate)
+# Initialize the autoencoder
+autoencoder = TransformerAutoencoder(input_dim, model_dim, num_heads, num_layers, sequence_length, reduced_dim, dropout=dropout)
 
 # Training 
 for epoch in range(num_epochs):
@@ -145,19 +173,17 @@ for epoch in range(num_epochs):
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
 
 torch.save(autoencoder, 'autoencoder.pt')
-
-#torch.load('autoencoder_b16_l0.0001_e50_d0.1.pt', weights_only=False, map_location=torch.device('cpu'))
+#torch.load('autoencoder.pt', weights_only=False, map_location=torch.device('cpu'))
 
 # Inference 
-latent_feats = np.empty((np.shape(time_series_list)[1], 0, model_dim))
+latent_feats = np.empty((0, reduced_dim))
 burst_list = np.empty((0,))
 for batch_idx, (batch, bursts) in enumerate(dataloader):
     batch = batch.permute(1, 0, 2).float()
     reconstructed, latent = autoencoder(batch)
-    latent_feats = np.concatenate([latent_feats, latent.detach().numpy()], axis=1)
+    latent_feats = np.concatenate([latent_feats, latent.cpu().detach().numpy()], axis=0)
     burst_list = np.concatenate([burst_list, bursts])
 
 latent_feats = latent_feats.reshape(-1, latent_feats.shape[1])
 np.save('latent_feats.npy', latent_feats)
 np.save('burst_list.npy', burst_list)
-

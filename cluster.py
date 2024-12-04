@@ -1,19 +1,18 @@
 import numpy as np 
 import matplotlib.pyplot as plt
-from sklearn.mixture import BayesianGaussianMixture
+from sklearn.mixture import BayesianGaussianMixture, GaussianMixture
 from sklearn.manifold import TSNE
 from sklearn.ensemble import IsolationForest
-from sklearn.impute import SimpleImputer
 
 latent_feats = np.load('latent_feats.npy')
 burst_list = np.load('burst_list.npy')
 
 # Fit Bayesian Gaussian Mixture Model
-bgm = BayesianGaussianMixture(n_components=10).fit(latent_feats)
+bgm = GaussianMixture(n_components=3).fit(latent_feats)
 cluster_assignments = bgm.predict(latent_feats)
 
 # Apply t-SNE for dimensionality reduction
-tsne = TSNE(n_components=2)
+tsne = TSNE(n_components=2, perplexity=50, metric='l1')
 latent_feats_2d = tsne.fit_transform(latent_feats)
 
 # Fit Isolation Forest to find outliers
@@ -33,7 +32,16 @@ plt.xlabel('t-SNE Component 1')
 plt.ylabel('t-SNE Component 2')
 plt.legend()
 plt.show()
+plt.savefig('clusters_outliers.png')
 
 # Identify and print burst IDs of outliers
 outlier_burst_ids = burst_list[outlier_labels == -1]
-print("Burst IDs of outliers:", outlier_burst_ids)
+for burst_id in outlier_burst_ids:
+        print(f"{burst_id:.0f}")
+
+# Print burst IDs of clusters
+for cluster in range(1,3):
+    cluster_burst_ids = burst_list[cluster_assignments == cluster]
+    print(f"Burst IDs of Cluster {cluster}:")
+    for burst_id in cluster_burst_ids:
+        print(f"{burst_id:.0f}")        
