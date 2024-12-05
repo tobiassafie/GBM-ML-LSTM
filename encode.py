@@ -11,7 +11,7 @@ from torch.utils.data import Dataset, DataLoader
 lcs = pd.read_csv('lcs.csv')
 channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b0', 'b1']
 
-# Fill missing channels with zeros/noise
+# Fill missing channels with noise
 for channel in channels: 
     missing_indices = lcs[channel].isnull()  
     num_missing = missing_indices.sum()
@@ -60,8 +60,18 @@ class PositionalEncoding(nn.Module):
         self.register_buffer('pe', pe)
 
     def forward(self, x):
-        x = x + self.pe[:x.size(0), :]
-        return x
+        return x + self.pe[:x.size(0), :]
+
+# Define the Channel Embedding Class
+class ChannelEmbedding(nn.Module):
+    def __init__(self, input_dim, model_dim):
+        super(ChannelEmbedding, self).__init__()
+        self.channel_embedding = nn.Linear(input_dim, model_dim)
+
+    def forward(self, x):
+        channel_indices = torch.arange(input_dim).unsqueeze(0).expand(x.size(0), x.size(1), -1) 
+        channel_embedded = self.channel_embedding(channel_indices.float())   
+        return x + channel_embedded    
 
 # Define the Transformer Encoder
 class TransformerEncoder(nn.Module):
@@ -71,15 +81,17 @@ class TransformerEncoder(nn.Module):
             nn.Linear(input_dim, model_dim),
             nn.ReLU()  
         )
+        self.channel_embedding = ChannelEmbedding(input_dim, model_dim)
         self.positional_encoding = PositionalEncoding(model_dim)
         encoder_layer = nn.TransformerEncoderLayer(d_model=model_dim, nhead=num_heads, dropout=dropout)
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
     def forward(self, src):
-        src = self.embedding(src)
+        src = self.embedding(src) 
+        src = self.channel_embedding(src)        
         src = self.positional_encoding(src)
         output = self.transformer_encoder(src)
-        return output
+        return output    
 
 # Define the Transformer Decoder
 class TransformerDecoder(nn.Module):
@@ -133,7 +145,7 @@ class TransformerAutoencoder(nn.Module):
         tgt = self.encoder.embedding(src)  
         tgt = self.encoder.positional_encoding(tgt)  
         output = self.decoder(tgt, expanded_latent)  
-        return output, reduced_latent  # Return output and reduced latent    
+        return output, reduced_latent  
     
 # Parameters
 input_dim = 14
@@ -141,7 +153,7 @@ model_dim = 32
 num_heads = 4
 num_layers = 2
 reduced_dim = 1024
-batch_size = 32
+batch_size = 16
 num_epochs = 50
 learning_rate = 0.0001
 dropout = 0.1
@@ -187,3 +199,4 @@ for batch_idx, (batch, bursts) in enumerate(dataloader):
 latent_feats = latent_feats.reshape(-1, latent_feats.shape[1])
 np.save('latent_feats.npy', latent_feats)
 np.save('burst_list.npy', burst_list)
+

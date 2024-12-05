@@ -8,7 +8,7 @@ latent_feats = np.load('latent_feats.npy')
 burst_list = np.load('burst_list.npy')
 
 # Fit Bayesian Gaussian Mixture Model
-bgm = GaussianMixture(n_components=3).fit(latent_feats)
+bgm = GaussianMixture(n_components=2).fit(latent_feats)
 cluster_assignments = bgm.predict(latent_feats)
 
 # Apply t-SNE for dimensionality reduction
@@ -40,7 +40,7 @@ for burst_id in outlier_burst_ids:
         print(f"{burst_id:.0f}")
 
 # Print burst IDs of clusters
-for cluster in range(1,3):
+for cluster in range(1,2):
     cluster_burst_ids = burst_list[cluster_assignments == cluster]
     print(f"Burst IDs of Cluster {cluster}:")
     for burst_id in cluster_burst_ids:
