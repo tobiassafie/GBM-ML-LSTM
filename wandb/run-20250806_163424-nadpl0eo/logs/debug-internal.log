@@ -1,0 +1,17 @@
+{"time":"2025-08-06T16:34:25.2183428-04:00","level":"INFO","msg":"stream: starting","core version":"0.21.0"}
+{"time":"2025-08-06T16:34:25.761918-04:00","level":"INFO","msg":"stream: created new stream","id":"nadpl0eo"}
+{"time":"2025-08-06T16:34:25.761918-04:00","level":"INFO","msg":"stream: started","id":"nadpl0eo"}
+{"time":"2025-08-06T16:34:25.761918-04:00","level":"INFO","msg":"handler: started","stream_id":"nadpl0eo"}
+{"time":"2025-08-06T16:34:25.761918-04:00","level":"INFO","msg":"sender: started","stream_id":"nadpl0eo"}
+{"time":"2025-08-06T16:34:25.761918-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"nadpl0eo"}
+{"time":"2025-08-06T16:35:22.3727637-04:00","level":"INFO","msg":"api: retrying HTTP error","status":500,"url":"https://api.wandb.ai/graphql","body":"{\"errors\":[{\"message\":\"context deadline exceeded\",\"path\":[\"project\",\"run\"]}],\"data\":{\"project\":{\"run\":null}}}"}
+{"time":"2025-08-06T16:36:08.9355832-04:00","level":"INFO","msg":"api: retrying HTTP error","status":500,"url":"https://api.wandb.ai/graphql","body":"{\"errors\":[{\"message\":\"context deadline exceeded\",\"path\":[\"project\",\"run\"]}],\"data\":{\"project\":{\"run\":null}}}"}
+{"time":"2025-08-06T16:36:29.1094737-04:00","level":"INFO","msg":"api: retrying HTTP error","status":500,"url":"https://api.wandb.ai/graphql","body":"{\"errors\":[{\"message\":\"context deadline exceeded\",\"path\":[\"project\",\"run\"]}],\"data\":{\"project\":{\"run\":null}}}"}
+{"time":"2025-08-06T16:36:52.6609535-04:00","level":"INFO","msg":"api: retrying HTTP error","status":500,"url":"https://api.wandb.ai/graphql","body":"{\"errors\":[{\"message\":\"context deadline exceeded\",\"path\":[\"project\",\"run\"]}],\"data\":{\"project\":{\"run\":null}}}"}
+{"time":"2025-08-06T16:37:39.5323539-04:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-08-06T16:38:00.2703646-04:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-08-06T16:38:04.7571792-04:00","level":"INFO","msg":"stream: closing","id":"nadpl0eo"}
+{"time":"2025-08-06T16:38:04.7571792-04:00","level":"INFO","msg":"handler: closed","stream_id":"nadpl0eo"}
+{"time":"2025-08-06T16:38:04.7571792-04:00","level":"INFO","msg":"sender: closed","stream_id":"nadpl0eo"}
+{"time":"2025-08-06T16:38:04.7571792-04:00","level":"INFO","msg":"writer: Close: closed","stream_id":"nadpl0eo"}
+{"time":"2025-08-06T16:38:04.7578443-04:00","level":"INFO","msg":"stream: closed","id":"nadpl0eo"}

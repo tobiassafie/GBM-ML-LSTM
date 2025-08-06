@@ -1,0 +1,5 @@
+Epoch 1, Final batch loss: 0.3256
+Epoch 2, Final batch loss: 0.3093
+wandb: 500 encountered ({"errors":[{"message":"context deadline exceeded","path":["project","run"]}],"data":{"project":{"run":null}}}), retrying request
+wandb: 500 encountered ({"errors":[{"message":"context deadline exceeded","path":["project","run"]}],"data":{"project":{"run":null}}}), retrying request
+Epoch 3, Final batch loss: 0.1933

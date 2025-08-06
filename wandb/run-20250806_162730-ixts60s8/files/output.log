@@ -1,0 +1,11 @@
+wandb: 502 encountered (
+wandb: <html><head>
+wandb: <meta http-equiv="content-type" content="text/html;charset=utf-8">
+wandb: <title>502 Server Error</title>
+wandb: </head>
+wandb: <body text=#000000 bgcolor=#ffffff>
+wandb: <h1>Error: Server Error</h1>
+wandb: <h2>The server encountered a temporary error and could not complete your request.<p>Please try again in 30 seconds.</h2>
+wandb: <h2></h2>
+wandb: </body></html>), retrying request
+Epoch 1, Final batch loss: 0.1820
