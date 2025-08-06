@@ -1,0 +1,24 @@
+{
+  "os": "Windows-10-10.0.26100-SP0",
+  "python": "CPython 3.10.18",
+  "startedAt": "2025-08-02T07:20:57.749737Z",
+  "program": "c:\\Users\\tobys\\Downloads\\GBM-ML-main\\GBM-ML-main\\lstm_sweeps.ipynb",
+  "codePath": "lstm_sweeps.ipynb",
+  "codePathLocal": "lstm_sweeps.ipynb",
+  "email": "toby.safie@gmail.com",
+  "root": "c:\\Users\\tobys\\Downloads\\GBM-ML-main\\GBM-ML-main",
+  "host": "Tobias_Lenovo",
+  "executable": "c:\\Users\\tobys\\anaconda3\\envs\\star-pinn\\python.exe",
+  "cpu_count": 8,
+  "cpu_count_logical": 16,
+  "disk": {
+    "/": {
+      "total": "1021821579264",
+      "used": "329992601600"
+    }
+  },
+  "memory": {
+    "total": "14806552576"
+  },
+  "writerId": "n5azzltv929r52gfyq7u56jw32vfs7w7"
+}

@@ -1,0 +1,13 @@
+{"time":"2025-08-02T02:40:42.3353749-04:00","level":"INFO","msg":"stream: starting","core version":"0.21.0"}
+{"time":"2025-08-02T02:40:42.5999-04:00","level":"INFO","msg":"stream: created new stream","id":"lb10qnft"}
+{"time":"2025-08-02T02:40:42.5999-04:00","level":"INFO","msg":"stream: started","id":"lb10qnft"}
+{"time":"2025-08-02T02:40:42.5999-04:00","level":"INFO","msg":"sender: started","stream_id":"lb10qnft"}
+{"time":"2025-08-02T02:40:42.5999-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"lb10qnft"}
+{"time":"2025-08-02T02:40:42.5999-04:00","level":"INFO","msg":"handler: started","stream_id":"lb10qnft"}
+{"time":"2025-08-02T03:00:49.5073066-04:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-08-02T03:00:49.6784309-04:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-08-02T03:00:49.6899299-04:00","level":"INFO","msg":"stream: closing","id":"lb10qnft"}
+{"time":"2025-08-02T03:00:49.6899299-04:00","level":"INFO","msg":"handler: closed","stream_id":"lb10qnft"}
+{"time":"2025-08-02T03:00:49.6899299-04:00","level":"INFO","msg":"sender: closed","stream_id":"lb10qnft"}
+{"time":"2025-08-02T03:00:49.6899299-04:00","level":"INFO","msg":"writer: Close: closed","stream_id":"lb10qnft"}
+{"time":"2025-08-02T03:00:49.6904385-04:00","level":"INFO","msg":"stream: closed","id":"lb10qnft"}

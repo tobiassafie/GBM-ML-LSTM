@@ -1,0 +1,34 @@
+2025-08-02 11:27:00,860 INFO    Thread-68 (_run_job):29928 [wandb_setup.py:_flush():80] Current SDK version is 0.21.0
+2025-08-02 11:27:00,860 INFO    Thread-68 (_run_job):29928 [wandb_setup.py:_flush():80] Configure stats pid to 29928
+2025-08-02 11:27:00,860 INFO    Thread-68 (_run_job):29928 [wandb_setup.py:_flush():80] Loading settings from C:\Users\tobys\.config\wandb\settings
+2025-08-02 11:27:00,860 INFO    Thread-68 (_run_job):29928 [wandb_setup.py:_flush():80] Loading settings from c:\Users\tobys\Downloads\GBM-ML-main\GBM-ML-main\wandb\settings
+2025-08-02 11:27:00,860 INFO    Thread-68 (_run_job):29928 [wandb_setup.py:_flush():80] Loading settings from environment variables
+2025-08-02 11:27:00,861 INFO    Thread-68 (_run_job):29928 [wandb_init.py:setup_run_log_directory():703] Logging user logs to c:\Users\tobys\Downloads\GBM-ML-main\GBM-ML-main\wandb\run-20250802_112700-24zs98os\logs\debug.log
+2025-08-02 11:27:00,861 INFO    Thread-68 (_run_job):29928 [wandb_init.py:setup_run_log_directory():704] Logging internal logs to c:\Users\tobys\Downloads\GBM-ML-main\GBM-ML-main\wandb\run-20250802_112700-24zs98os\logs\debug-internal.log
+2025-08-02 11:27:00,861 INFO    Thread-68 (_run_job):29928 [wandb_init.py:monkeypatch_ipython():622] configuring jupyter hooks <wandb.sdk.wandb_init._WandbInit object at 0x0000017F266339D0>
+2025-08-02 11:27:00,861 INFO    Thread-68 (_run_job):29928 [wandb_init.py:init():830] calling init triggers
+2025-08-02 11:27:00,861 INFO    Thread-68 (_run_job):29928 [wandb_init.py:init():835] wandb.init called with sweep_config: {'batch_size': 16, 'dropout': 0, 'hidden_dim': 32, 'input_dim': 14, 'latent_dim': 64, 'learning_rate': 0.00022, 'num_epochs': 15, 'num_layers': 3}
+config: {'_wandb': {}}
+2025-08-02 11:27:00,861 INFO    Thread-68 (_run_job):29928 [wandb_init.py:init():871] starting backend
+2025-08-02 11:27:01,090 INFO    Thread-68 (_run_job):29928 [wandb_init.py:init():874] sending inform_init request
+2025-08-02 11:27:01,092 INFO    Thread-68 (_run_job):29928 [wandb_init.py:init():882] backend started and connected
+2025-08-02 11:27:01,097 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_config_callback():1363] config_cb None None {'batch_size': 16, 'dropout': 0, 'hidden_dim': 32, 'input_dim': 14, 'latent_dim': 64, 'learning_rate': 0.00022, 'num_epochs': 15, 'num_layers': 3}
+2025-08-02 11:27:01,098 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_label_probe_notebook():1304] probe notebook
+2025-08-02 11:27:01,100 INFO    Thread-68 (_run_job):29928 [wandb_init.py:init():953] updated telemetry
+2025-08-02 11:27:01,104 INFO    Thread-68 (_run_job):29928 [wandb_init.py:init():977] communicating run to backend with 90.0 second timeout
+2025-08-02 11:27:01,485 INFO    Thread-68 (_run_job):29928 [wandb_init.py:init():1029] starting run threads in backend
+2025-08-02 11:27:01,852 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_console_start():2458] atexit reg
+2025-08-02 11:27:01,852 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_redirect():2306] redirect: wrap_raw
+2025-08-02 11:27:01,852 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_redirect():2375] Wrapping output streams.
+2025-08-02 11:27:01,852 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_redirect():2398] Redirects installed.
+2025-08-02 11:27:01,853 INFO    Thread-68 (_run_job):29928 [wandb_init.py:init():1075] run started, returning control to user process
+2025-08-02 17:38:01,537 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_finish():2224] finishing run tobiassafie-drexel-university/GBM-LSTM-Sweep/24zs98os
+2025-08-02 17:38:01,537 INFO    Thread-68 (_run_job):29928 [jupyter.py:save_history():480] not saving jupyter history
+2025-08-02 17:38:01,537 INFO    Thread-68 (_run_job):29928 [jupyter.py:save_ipynb():404] not saving jupyter notebook
+2025-08-02 17:38:01,537 INFO    Thread-68 (_run_job):29928 [wandb_init.py:_jupyter_teardown():607] cleaning up jupyter logic
+2025-08-02 17:38:01,537 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_atexit_cleanup():2423] got exitcode: 0
+2025-08-02 17:38:01,537 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_restore():2405] restore
+2025-08-02 17:38:01,538 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_restore():2411] restore done
+2025-08-02 17:38:02,154 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_footer_history_summary_info():3903] rendering history
+2025-08-02 17:38:02,154 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_footer_history_summary_info():3935] rendering summary
+2025-08-02 17:38:02,156 INFO    Thread-68 (_run_job):29928 [wandb_run.py:_footer_sync_info():3864] logging synced files

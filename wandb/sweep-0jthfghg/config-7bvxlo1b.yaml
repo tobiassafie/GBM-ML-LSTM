@@ -1,0 +1,18 @@
+wandb_version: 1
+
+batch_size:
+  value: 16
+dropout:
+  value: 0.1
+learning_rate:
+  value: 1.0016067862020326
+model_dim:
+  value: 32
+num_epochs:
+  value: 50
+num_heads:
+  value: 4
+num_layers:
+  value: 2
+reduced_dim:
+  value: 1024

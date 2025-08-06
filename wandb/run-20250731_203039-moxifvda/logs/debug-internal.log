@@ -1,0 +1,12 @@
+{"time":"2025-07-31T20:30:39.9189492-04:00","level":"INFO","msg":"stream: starting","core version":"0.21.0"}
+{"time":"2025-07-31T20:30:40.1727372-04:00","level":"INFO","msg":"stream: created new stream","id":"moxifvda"}
+{"time":"2025-07-31T20:30:40.1727372-04:00","level":"INFO","msg":"stream: started","id":"moxifvda"}
+{"time":"2025-07-31T20:30:40.1727372-04:00","level":"INFO","msg":"handler: started","stream_id":"moxifvda"}
+{"time":"2025-07-31T20:30:40.1727372-04:00","level":"INFO","msg":"sender: started","stream_id":"moxifvda"}
+{"time":"2025-07-31T20:30:40.1727372-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"moxifvda"}
+{"time":"2025-07-31T22:52:33.8867588-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-ML-Sweep/moxifvda/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-07-31T22:52:36.261723-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-ML-Sweep/moxifvda/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-07-31T22:52:40.3650961-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-ML-Sweep/moxifvda/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-07-31T23:44:36.1004633-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-ML-Sweep/moxifvda/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-07-31T23:44:37.1759112-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-07-31T23:44:39.2967984-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": dial tcp: lookup api.wandb.ai: no such host"}
