@@ -23,3 +23,13 @@ config: {'_wandb': {}}
 2025-08-06 14:02:41,744 INFO    Thread-69 (_run_job):3484 [wandb_run.py:_redirect():2375] Wrapping output streams.
 2025-08-06 14:02:41,744 INFO    Thread-69 (_run_job):3484 [wandb_run.py:_redirect():2398] Redirects installed.
 2025-08-06 14:02:41,744 INFO    Thread-69 (_run_job):3484 [wandb_init.py:init():1075] run started, returning control to user process
+2025-08-06 14:28:12,837 INFO    Thread-69 (_run_job):3484 [wandb_run.py:_finish():2224] finishing run tobiassafie-drexel-university/GBM-LSTM-LR-Sweep/iyvofr9h
+2025-08-06 14:28:12,844 INFO    Thread-69 (_run_job):3484 [jupyter.py:save_history():480] not saving jupyter history
+2025-08-06 14:28:12,845 INFO    Thread-69 (_run_job):3484 [jupyter.py:save_ipynb():404] not saving jupyter notebook
+2025-08-06 14:28:12,845 INFO    Thread-69 (_run_job):3484 [wandb_init.py:_jupyter_teardown():607] cleaning up jupyter logic
+2025-08-06 14:28:12,846 INFO    Thread-69 (_run_job):3484 [wandb_run.py:_atexit_cleanup():2423] got exitcode: 0
+2025-08-06 14:28:12,847 INFO    Thread-69 (_run_job):3484 [wandb_run.py:_restore():2405] restore
+2025-08-06 14:28:12,848 INFO    Thread-69 (_run_job):3484 [wandb_run.py:_restore():2411] restore done
+2025-08-06 14:28:18,978 INFO    Thread-69 (_run_job):3484 [wandb_run.py:_footer_history_summary_info():3903] rendering history
+2025-08-06 14:28:18,978 INFO    Thread-69 (_run_job):3484 [wandb_run.py:_footer_history_summary_info():3935] rendering summary
+2025-08-06 14:28:18,978 INFO    Thread-69 (_run_job):3484 [wandb_run.py:_footer_sync_info():3864] logging synced files

@@ -1,3 +1,5 @@
+# 1.0 - First working model of LSTM
+
 import numpy as np
 import pandas as pd
 import torch

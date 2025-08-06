@@ -1,3 +1,5 @@
+# 1.3 - 20 epochs instead of 15 and used new learning rate from hyperparam sweeps
+
 import numpy as np
 import pandas as pd
 import torch
@@ -162,7 +164,7 @@ num_layers      = 2        # Number of LSTM layers
 dropout         = 0.4      # Dropout between LSTM layers
 batch_size      = 16       # Number of GRBs per batch
 num_epochs      = 20       # Training epochs
-learning_rate   = 0.00022  # Optimizer learning rate
+learning_rate   = 0.00012  # Optimizer learning rate
 sequence_length = np.shape(time_series_list)[1]  # Timesteps per GRB
 
 

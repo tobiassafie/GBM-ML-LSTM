@@ -1,0 +1,17 @@
+{"time":"2025-08-06T14:46:42.8848346-04:00","level":"INFO","msg":"stream: starting","core version":"0.21.0"}
+{"time":"2025-08-06T14:46:43.1519176-04:00","level":"INFO","msg":"stream: created new stream","id":"31logj6x"}
+{"time":"2025-08-06T14:46:43.1524565-04:00","level":"INFO","msg":"stream: started","id":"31logj6x"}
+{"time":"2025-08-06T14:46:43.1524565-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"31logj6x"}
+{"time":"2025-08-06T14:46:43.1524565-04:00","level":"INFO","msg":"handler: started","stream_id":"31logj6x"}
+{"time":"2025-08-06T14:46:43.1524565-04:00","level":"INFO","msg":"sender: started","stream_id":"31logj6x"}
+{"time":"2025-08-06T15:09:04.4876764-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-LR-Sweep/31logj6x/file_stream\": read tcp 10.250.99.48:54079->35.186.228.49:443: wsarecv: An existing connection was forcibly closed by the remote host."}
+{"time":"2025-08-06T15:09:10.9444311-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": read tcp 10.250.99.48:54062->35.186.228.49:443: wsarecv: An existing connection was forcibly closed by the remote host."}
+{"time":"2025-08-06T15:09:16.8586869-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-LR-Sweep/31logj6x/file_stream\": EOF"}
+{"time":"2025-08-06T15:09:23.0123161-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": EOF"}
+{"time":"2025-08-06T15:16:30.2173506-04:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-08-06T15:16:30.4001069-04:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-08-06T15:16:30.4223504-04:00","level":"INFO","msg":"stream: closing","id":"31logj6x"}
+{"time":"2025-08-06T15:16:30.4223504-04:00","level":"INFO","msg":"sender: closed","stream_id":"31logj6x"}
+{"time":"2025-08-06T15:16:30.4223504-04:00","level":"INFO","msg":"handler: closed","stream_id":"31logj6x"}
+{"time":"2025-08-06T15:16:30.4223504-04:00","level":"INFO","msg":"writer: Close: closed","stream_id":"31logj6x"}
+{"time":"2025-08-06T15:16:30.4228946-04:00","level":"INFO","msg":"stream: closed","id":"31logj6x"}

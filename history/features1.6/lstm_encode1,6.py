@@ -1,3 +1,5 @@
+# 1.6 - Reduced the agressiveness of the scheduler (patience=1 --> =2); Reverted to 1.2s learning rate (0.00022); Reduced epochs 20-->10
+
 import numpy as np
 import pandas as pd
 import torch
@@ -161,7 +163,7 @@ latent_dim      = 64       # Size of latent representation (embedding)
 num_layers      = 2        # Number of LSTM layers
 dropout         = 0.4      # Dropout between LSTM layers
 batch_size      = 16       # Number of GRBs per batch
-num_epochs      = 2       # Training epochs
+num_epochs      = 10       # Training epochs
 learning_rate   = 0.00022  # Optimizer learning rate
 sequence_length = np.shape(time_series_list)[1]  # Timesteps per GRB
 

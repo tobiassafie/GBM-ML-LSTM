@@ -1,0 +1,26 @@
+{
+  "os": "Windows-10-10.0.26100-SP0",
+  "python": "CPython 3.10.18",
+  "startedAt": "2025-08-06T18:46:42.627620Z",
+  "program": "<python with no main file>",
+  "git": {
+    "remote": "https://github.com/tobiassafie/GBM-ML-LSTM.git",
+    "commit": "85dbed8e3fb350b3325ef492eb69a81052bcdbaf"
+  },
+  "email": "toby.safie@gmail.com",
+  "root": "c:\\Users\\tobys\\OneDrive\\Desktop\\GBM-ML-LSTM",
+  "host": "Tobias_Lenovo",
+  "executable": "c:\\Users\\tobys\\anaconda3\\envs\\star-pinn\\python.exe",
+  "cpu_count": 8,
+  "cpu_count_logical": 16,
+  "disk": {
+    "/": {
+      "total": "1021821579264",
+      "used": "326834704384"
+    }
+  },
+  "memory": {
+    "total": "14806552576"
+  },
+  "writerId": "j9002lw2i5rxjjoh0if3zxzzig432cue"
+}

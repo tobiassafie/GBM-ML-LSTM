@@ -6,3 +6,10 @@
 {"time":"2025-08-06T14:02:41.2135381-04:00","level":"INFO","msg":"sender: started","stream_id":"iyvofr9h"}
 {"time":"2025-08-06T14:20:23.2262317-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-LR-Sweep/iyvofr9h/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
 {"time":"2025-08-06T14:20:25.4151503-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-LR-Sweep/iyvofr9h/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-06T14:28:13.3455639-04:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-08-06T14:28:13.8967157-04:00","level":"INFO","msg":"handler: operation stats","stats":{"operations":[{"desc":"uploading data","runtime_seconds":13.6839476}],"total_operations":1}}
+{"time":"2025-08-06T14:28:18.9899289-04:00","level":"INFO","msg":"stream: closing","id":"iyvofr9h"}
+{"time":"2025-08-06T14:28:18.9899289-04:00","level":"INFO","msg":"handler: closed","stream_id":"iyvofr9h"}
+{"time":"2025-08-06T14:28:18.9899289-04:00","level":"INFO","msg":"sender: closed","stream_id":"iyvofr9h"}
+{"time":"2025-08-06T14:28:18.9899289-04:00","level":"INFO","msg":"writer: Close: closed","stream_id":"iyvofr9h"}
+{"time":"2025-08-06T14:28:18.9909136-04:00","level":"INFO","msg":"stream: closed","id":"iyvofr9h"}
