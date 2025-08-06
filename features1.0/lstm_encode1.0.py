@@ -93,7 +93,7 @@ Notes:
 
 # Bidirectional LSTM Autoencoder Model w/ attention
 class Encoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout):
+    def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout=0.2):
         super().__init__()
         self.lstm = nn.LSTM(
             input_size=input_size,
@@ -141,9 +141,9 @@ class Decoder(nn.Module):
 
 
 class BiLSTMAutoencoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, latent_size, seq_len, dropout):
+    def __init__(self, input_size, hidden_size, num_layers, latent_size, seq_len):
         super().__init__()
-        self.encoder = Encoder(input_size, hidden_size, num_layers, latent_size, dropout)
+        self.encoder = Encoder(input_size, hidden_size, num_layers, latent_size)
         self.decoder = Decoder(latent_size, hidden_size, num_layers, input_size, seq_len)
 
     def forward(self, x):
@@ -156,12 +156,12 @@ class BiLSTMAutoencoder(nn.Module):
 
 # Parameters
 input_dim       = 14       # Number of detectors (features per timestep)
-hidden_dim      = 16       # LSTM hidden state size
-latent_dim      = 64       # Size of latent representation (embedding)
+hidden_dim      = 64       # LSTM hidden state size
+latent_dim      = 32       # Size of latent representation (embedding)
 num_layers      = 2        # Number of LSTM layers
-dropout         = 0.4      # Dropout between LSTM layers
+dropout         = 0.2      # Dropout between LSTM layers
 batch_size      = 16       # Number of GRBs per batch
-num_epochs      = 20       # Training epochs
+num_epochs      = 15       # Training epochs
 learning_rate   = 0.00022  # Optimizer learning rate
 sequence_length = np.shape(time_series_list)[1]  # Timesteps per GRB
 
@@ -171,14 +171,12 @@ model = BiLSTMAutoencoder(
     hidden_dim,
     num_layers,
     latent_dim,
-    sequence_length,
-    dropout
+    sequence_length
 )
 
-# Define the loss function and optimizer and scheduler
+# Define the loss function and optimizer
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3, factor=0.5)
 
 # Get data
 dataset = GRBDataset(time_series_list)
@@ -186,19 +184,18 @@ dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # Training loop
 for epoch in range(num_epochs):
-    for i, batch in enumerate(dataloader):
+    total_loss = 0
+    for batch in dataloader:
         batch = batch.float()
         optimizer.zero_grad()
         reconstructed, _, _ = model(batch)
         loss = criterion(reconstructed, batch)
         loss.backward()
         optimizer.step()
-        scheduler.step(loss)
+        total_loss += loss.item()
 
+    print(f"Epoch {epoch+1}, Loss: {total_loss/len(dataloader):.4f}")
 
-        # Print the final batch loss for this epoch
-        if i == len(dataloader) - 1:
-            print(f"Epoch {epoch+1}, Final batch loss: {loss.item():.4f}")
     
 # Extract latent features / Inference
 model.eval()

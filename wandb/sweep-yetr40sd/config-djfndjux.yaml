@@ -1,0 +1,18 @@
+wandb_version: 1
+
+batch_size:
+  value: 16
+dropout:
+  value: 0.4
+hidden_dim:
+  value: 16
+input_dim:
+  value: 14
+latent_dim:
+  value: 64
+learning_rate:
+  value: 3.066105945938077e-05
+num_epochs:
+  value: 15
+num_layers:
+  value: 2
