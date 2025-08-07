@@ -1,0 +1,13 @@
+{"time":"2025-08-06T22:40:29.0590404-04:00","level":"INFO","msg":"stream: starting","core version":"0.21.0"}
+{"time":"2025-08-06T22:40:29.6479221-04:00","level":"INFO","msg":"stream: created new stream","id":"coug4lc0"}
+{"time":"2025-08-06T22:40:29.6479221-04:00","level":"INFO","msg":"stream: started","id":"coug4lc0"}
+{"time":"2025-08-06T22:40:29.6479221-04:00","level":"INFO","msg":"handler: started","stream_id":"coug4lc0"}
+{"time":"2025-08-06T22:40:29.6479221-04:00","level":"INFO","msg":"sender: started","stream_id":"coug4lc0"}
+{"time":"2025-08-06T22:40:29.6479221-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"coug4lc0"}
+{"time":"2025-08-06T22:40:30.407835-04:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-08-06T22:40:30.8349637-04:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-08-06T22:40:30.8370387-04:00","level":"INFO","msg":"stream: closing","id":"coug4lc0"}
+{"time":"2025-08-06T22:40:30.8370387-04:00","level":"INFO","msg":"handler: closed","stream_id":"coug4lc0"}
+{"time":"2025-08-06T22:40:30.8370387-04:00","level":"INFO","msg":"sender: closed","stream_id":"coug4lc0"}
+{"time":"2025-08-06T22:40:30.8370387-04:00","level":"INFO","msg":"writer: Close: closed","stream_id":"coug4lc0"}
+{"time":"2025-08-06T22:40:30.8381492-04:00","level":"INFO","msg":"stream: closed","id":"coug4lc0"}

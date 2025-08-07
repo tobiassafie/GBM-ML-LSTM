@@ -1,0 +1,21 @@
+{"time":"2025-08-06T18:09:35.6031524-04:00","level":"INFO","msg":"stream: starting","core version":"0.21.0"}
+{"time":"2025-08-06T18:09:36.1443777-04:00","level":"INFO","msg":"stream: created new stream","id":"d7uy8d95"}
+{"time":"2025-08-06T18:09:36.1443777-04:00","level":"INFO","msg":"stream: started","id":"d7uy8d95"}
+{"time":"2025-08-06T18:09:36.1443777-04:00","level":"INFO","msg":"handler: started","stream_id":"d7uy8d95"}
+{"time":"2025-08-06T18:09:36.1443777-04:00","level":"INFO","msg":"sender: started","stream_id":"d7uy8d95"}
+{"time":"2025-08-06T18:09:36.1443777-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"d7uy8d95"}
+{"time":"2025-08-06T18:10:32.9365034-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-lr-hiddenDim-dropout/d7uy8d95/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-06T18:10:35.4284559-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-lr-hiddenDim-dropout/d7uy8d95/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-06T18:10:39.7013421-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-lr-hiddenDim-dropout/d7uy8d95/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-06T18:10:40.6328614-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": read tcp 10.250.108.120:49716->35.186.228.49:443: wsarecv: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond."}
+{"time":"2025-08-06T18:10:43.03694-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-06T18:10:47.3191979-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-06T18:11:00.4217175-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-lr-hiddenDim-dropout/d7uy8d95/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-06T18:11:00.4217175-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-06T18:13:51.1979121-04:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-08-06T18:13:51.5522403-04:00","level":"INFO","msg":"handler: operation stats","stats":{"operations":[{"desc":"uploading data","runtime_seconds":0.3543282}],"total_operations":1}}
+{"time":"2025-08-06T18:13:51.6768262-04:00","level":"INFO","msg":"stream: closing","id":"d7uy8d95"}
+{"time":"2025-08-06T18:13:51.6768262-04:00","level":"INFO","msg":"handler: closed","stream_id":"d7uy8d95"}
+{"time":"2025-08-06T18:13:51.6768262-04:00","level":"INFO","msg":"sender: closed","stream_id":"d7uy8d95"}
+{"time":"2025-08-06T18:13:51.6768262-04:00","level":"INFO","msg":"writer: Close: closed","stream_id":"d7uy8d95"}
+{"time":"2025-08-06T18:13:51.6768262-04:00","level":"INFO","msg":"stream: closed","id":"d7uy8d95"}

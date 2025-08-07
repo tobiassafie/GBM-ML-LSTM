@@ -1,4 +1,4 @@
-# 1.2 Added a scheduler and tweaked architecture hyperparams (latent_dim, hidden_dim, num_layers, dropout)
+# 1.9 - Added a projection layer to the Encoder class
 
 import numpy as np
 import pandas as pd
@@ -87,7 +87,6 @@ Notes:
 - There is no intermediate network.
 - Dropout has yet to be tuned.
 - Could use a more complex decoder.
-- Could use a more robust attention mechanism.
 - Could use a more explicit regularization method than dropout alone.
 - I have not tried a Time-Aware LSTM yet (will require a new preprocessing script).
 - 
@@ -95,7 +94,7 @@ Notes:
 
 # Bidirectional LSTM Autoencoder Model w/ attention
 class Encoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout):
+    def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout, num_heads):
         super().__init__()
         self.lstm = nn.LSTM(
             input_size=input_size,
@@ -105,18 +104,30 @@ class Encoder(nn.Module):
             dropout=dropout,
             bidirectional=True
         )
-        self.attention = nn.Linear(hidden_size * 2, 1)
-        self.fc_latent = nn.Linear(hidden_size * 2, latent_size)  # compress to latent
+
+        self.mha = nn.MultiheadAttention(
+            embed_dim=hidden_size * 2,
+            num_heads=num_heads,
+            batch_first=True
+        )
+
+        # Attention scoring layer (after MHA)
+        self.attn_score = nn.Linear(hidden_size * 2, 1)
+        self.fc_latent = nn.Linear(hidden_size * 2, latent_size)
 
     def forward(self, x):
-        out, _ = self.lstm(x)  # out: [batch, time, hidden_size*2]
+        out, _ = self.lstm(x)  # [batch, time, hidden*2]
+        attn_output, _ = self.mha(out, out, out)  # [batch, time, hidden*2]
 
-        attn_scores = self.attention(out)              # [batch, time, 1]
-        attn_weights = torch.softmax(attn_scores, 1)   # normalize over time
-        context = torch.sum(attn_weights * out, dim=1) # [batch, hidden_size*2]
+        # Compute attention scores across time
+        attn_scores = self.attn_score(attn_output)          # [batch, time, 1]
+        attn_weights = torch.softmax(attn_scores, dim=1)    # [batch, time, 1]
 
-        latent = self.fc_latent(context)               # [batch, latent_size]
-        return latent, attn_weights                    # return latent features (what we're trying to extract) + attention weights
+        # Weighted sum over time
+        context = torch.sum(attn_weights * attn_output, dim=1)  # [batch, hidden*2]
+
+        latent = self.fc_latent(context)  # [batch, latent_size]
+        return latent, attn_weights
 
 
 class Decoder(nn.Module):
@@ -143,9 +154,9 @@ class Decoder(nn.Module):
 
 
 class BiLSTMAutoencoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, latent_size, seq_len, dropout):
+    def __init__(self, input_size, hidden_size, num_layers, latent_size, seq_len, dropout, num_heads):
         super().__init__()
-        self.encoder = Encoder(input_size, hidden_size, num_layers, latent_size, dropout)
+        self.encoder = Encoder(input_size, hidden_size, num_layers, latent_size, dropout, num_heads)
         self.decoder = Decoder(latent_size, hidden_size, num_layers, input_size, seq_len)
 
     def forward(self, x):
@@ -158,13 +169,14 @@ class BiLSTMAutoencoder(nn.Module):
 
 # Parameters
 input_dim       = 14       # Number of detectors (features per timestep)
-hidden_dim      = 128      # LSTM hidden state size
+hidden_dim      = 16       # LSTM hidden state size
 latent_dim      = 64       # Size of latent representation (embedding)
-num_layers      = 1        # Number of LSTM layers
-dropout         = 0        # Dropout between LSTM layers
-batch_size      = 16       # Number of GRBs per batch
+num_layers      = 3        # Number of LSTM layers
+dropout         = 0.4      # Dropout between LSTM layers
+batch_size      = 32       # Number of GRBs per batch
 num_epochs      = 15       # Training epochs
 learning_rate   = 0.00022  # Optimizer learning rate
+num_heads       = 4        # Number of attention heads
 sequence_length = np.shape(time_series_list)[1]  # Timesteps per GRB
 
 
@@ -174,13 +186,14 @@ model = BiLSTMAutoencoder(
     num_layers,
     latent_dim,
     sequence_length,
-    dropout
+    dropout,
+    num_heads
 )
 
 # Define the loss function and optimizer and scheduler
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3, factor=0.5)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=1, factor=0.5)
 
 # Get data
 dataset = GRBDataset(time_series_list)
@@ -194,13 +207,14 @@ for epoch in range(num_epochs):
         reconstructed, _, _ = model(batch)
         loss = criterion(reconstructed, batch)
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.25) # Gradient clipping; max_norm can be adjusted
         optimizer.step()
         scheduler.step(loss)
 
 
         # Print the final batch loss for this epoch
         if i == len(dataloader) - 1:
-            print(f"Epoch {epoch+1}, Final batch loss: {loss.item():.4f}")
+            print(f"Epoch {epoch+1}, Final batch loss: {loss.item():.4f}, Average Loss: {loss.item()/batch_size:.4f}")
     
 # Extract latent features / Inference
 model.eval()
