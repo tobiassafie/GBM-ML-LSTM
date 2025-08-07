@@ -1,4 +1,4 @@
-# 2.1 - Refactored our decoder: latent vector now initializes LSTM hidden and cell states instead of being repeated across timesteps. Input is now a zero vector. Added 2-layer output head for reconstruction.
+# 2.1 - Rolled back to 1.3 and am trying a channel embedding
 
 import numpy as np
 import pandas as pd
@@ -93,89 +93,77 @@ Notes:
 - 
 '''
 
+class ChannelEmbedding(nn.module):
+    def __init__(self, input_dim, model_dim):
+        super(ChannelEmbedding, self).__init__()
+        self.channel_embedding = nn.Linear(input_dim, model_dim)
+
+    def forward(self, x):
+        # x: [B, T, C]
+        B, T, C = x.shape
+        channel_indices = torch.arange(C, device=x.device).float()  # [C]
+        channel_indices = channel_indices.unsqueeze(0).unsqueeze(0).expand(B, T, C)  # [B, T, C]
+        channel_embedded = self.channel_embedding(channel_indices)  # [B, T, model_dim]
+        return x + channel_embedded
+
+
 # Bidirectional LSTM Autoencoder Model w/ attention
 class Encoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout):
+    def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout, model_dim=None):
         super().__init__()
+        if model_dim is None:
+            model_dim = input_size  # fallback to raw dim
+        
+        self.channel_embedding = ChannelEmbedding(input_size, model_dim)
 
         self.lstm = nn.LSTM(
-            input_size=input_size,
+            input_size=model_dim,
             hidden_size=hidden_size,
             num_layers=num_layers,
             batch_first=True,
             dropout=dropout,
             bidirectional=True
         )
-
         self.attention = nn.Linear(hidden_size * 2, 1)
+        self.fc_latent = nn.Linear(hidden_size * 2, latent_size)
 
-        # Let's try a projection layer to get to latent size!!!
-        self.proj = nn.Sequential(
-            nn.Linear(hidden_size * 2, hidden_size * 2),
-            nn.ReLU(),  # Try SiLU or GELU later
-            nn.Linear(hidden_size * 2, latent_size)
-        )
-
-    def forward(self, x):
-        out, _ = self.lstm(x)  # [batch, time, hidden_size*2]
-
-        attn_scores = self.attention(out)               # [batch, time, 1]
-        attn_weights = torch.softmax(attn_scores, dim=1)
-        context = torch.sum(attn_weights * out, dim=1)  # [batch, hidden_size*2]
-
-        latent = self.proj(context)                     # [batch, latent_size]
+    def forward(self, x):  # x: [B, T, C]
+        x = self.channel_embedding(x)  # [B, T, model_dim]
+        out, _ = self.lstm(x)
+        attn_scores = self.attention(out)
+        attn_weights = torch.softmax(attn_scores, 1)
+        context = torch.sum(attn_weights * out, dim=1)
+        latent = self.fc_latent(context)
         return latent, attn_weights
-
 
 
 class Decoder(nn.Module):
     def __init__(self, latent_size, hidden_size, num_layers, output_size, seq_len):
         super().__init__()
-        self.seq_len = seq_len
-        self.num_layers = num_layers
-        self.hidden_size = hidden_size
-
-        # Latent to LSTM hidden/cell states
-        self.latent_to_h = nn.Linear(latent_size, hidden_size * num_layers * 2)  # 2 for bidirectional
-        self.latent_to_c = nn.Linear(latent_size, hidden_size * num_layers * 2)
-
-        # LSTM: input is zero vector, output is time series
+        self.fc_expand = nn.Linear(latent_size, hidden_size * 2)
         self.lstm = nn.LSTM(
-            input_size=output_size,  # feed dummy input, e.g., zeros
+            input_size=hidden_size * 2,
             hidden_size=hidden_size,
             num_layers=num_layers,
             batch_first=True,
             bidirectional=True
         )
-
-        # Output projection: [batch, time, hidden*2] → [batch, time, output]
-        self.fc_out = nn.Sequential(
-            nn.Linear(hidden_size * 2, hidden_size),
-            nn.ReLU(),
-            nn.Linear(hidden_size, output_size)
-        )
+        self.fc_out = nn.Linear(hidden_size * 2, output_size)
+        self.seq_len = seq_len
 
     def forward(self, latent):
-        batch_size = latent.size(0)
-
-        # Init hidden and cell states
-        h0 = self.latent_to_h(latent).view(self.num_layers * 2, batch_size, self.hidden_size)
-        c0 = self.latent_to_c(latent).view(self.num_layers * 2, batch_size, self.hidden_size)
-
-        # Dummy input: zeros for each timestep
-        input_zeros = torch.zeros(batch_size, self.seq_len, self.fc_out[-1].out_features).to(latent.device)
-
-        # Decode sequence
-        output, _ = self.lstm(input_zeros, (h0, c0))  # [batch, time, hidden*2]
-        output = self.fc_out(output)                  # [batch, time, output_size]
-
+        # Expand latent vector to all timesteps
+        repeated = self.fc_expand(latent).unsqueeze(1).repeat(1, self.seq_len, 1)
+        
+        output, _ = self.lstm(repeated)     # [batch, time, hidden_size*2]
+        output = self.fc_out(output)        # [batch, time, output_size]
         return output
 
 
 class BiLSTMAutoencoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, latent_size, seq_len, dropout):
+    def __init__(self, input_size, hidden_size, num_layers, latent_size, seq_len, dropout, model_dim):
         super().__init__()
-        self.encoder = Encoder(input_size, hidden_size, num_layers, latent_size, dropout)
+        self.encoder = Encoder(input_size, hidden_size, num_layers, latent_size, dropout, model_dim)
         self.decoder = Decoder(latent_size, hidden_size, num_layers, input_size, seq_len)
 
     def forward(self, x):
@@ -190,11 +178,11 @@ class BiLSTMAutoencoder(nn.Module):
 input_dim       = 14       # Number of detectors (features per timestep)
 hidden_dim      = 16       # LSTM hidden state size
 latent_dim      = 64       # Size of latent representation (embedding)
-num_layers      = 3        # Number of LSTM layers
+num_layers      = 2        # Number of LSTM layers
 dropout         = 0.4      # Dropout between LSTM layers
-batch_size      = 32       # Number of GRBs per batch
-num_epochs      = 15       # Training epochs
-learning_rate   = 0.00022  # Optimizer learning rate
+batch_size      = 16       # Number of GRBs per batch
+num_epochs      = 20       # Training epochs
+learning_rate   = 0.00012  # Optimizer learning rate
 sequence_length = np.shape(time_series_list)[1]  # Timesteps per GRB
 
 
@@ -224,7 +212,6 @@ for epoch in range(num_epochs):
         reconstructed, _, _ = model(batch)
         loss = criterion(reconstructed, batch)
         loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.25)
         optimizer.step()
         scheduler.step(loss)
 

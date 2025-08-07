@@ -10,7 +10,7 @@ latent_feats = np.load('latent_feats.npy')
 burst_list = np.load('burst_list.npy')
 
 # Fit Bayesian Gaussian Mixture Model
-bgm = BayesianGaussianMixture(n_components=2).fit(latent_feats)
+bgm = GaussianMixture(n_components=2).fit(latent_feats)
 cluster_assignments = bgm.predict(latent_feats)
 
 # Apply t-SNE for dimensionality reduction
@@ -20,6 +20,19 @@ latent_feats_2d = tsne.fit_transform(latent_feats)
 # Fit Isolation Forest to find outliers
 iso_forest = IsolationForest()
 outlier_labels = iso_forest.fit_predict(latent_feats)
+
+# --- Combining Cluster and Outlier Labels ---
+# Create a DataFrame with the cluster assignments.
+df = pd.DataFrame({
+    'burst_id': burst_list.astype(int),
+    'cluster_label': cluster_assignments
+})
+
+# Identify and set outliers to label -1. This is the crucial step.
+df['cluster_label'] = np.where(outlier_labels == -1, -1, df['cluster_label'])
+
+# --- Save to CSV ---
+df.to_csv('cluster_labels.csv', index=False)
 
 '''
 # Visualize clusters and outliers
@@ -43,6 +56,7 @@ outlier_burst_ids = burst_list[outlier_labels == -1]
 outliers_df = pd.DataFrame({'burst_id': outlier_burst_ids.astype(int)})
 outliers_df.to_csv('outlier_burst_ids.csv', index=False)
 
+'''
 for burst_id in outlier_burst_ids:
         print(f"{burst_id:.0f}")
 
@@ -52,6 +66,7 @@ for cluster in range(1,2):
     print(f"Burst IDs of Cluster {cluster}:")
     for burst_id in cluster_burst_ids:
         print(f"{burst_id:.0f}")        
+'''
 
 pca = PCA(n_components=2)
 latent_feats_pca = pca.fit_transform(latent_feats)
@@ -68,4 +83,3 @@ plt.legend()
 
 plt.tight_layout()
 plt.show()
-
