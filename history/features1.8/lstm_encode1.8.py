@@ -1,4 +1,4 @@
-# 2.1 - Rolled back to 1.3 and am trying a channel embedding
+# 1.8 - Added a projection layer
 
 import numpy as np
 import pandas as pd
@@ -93,48 +93,39 @@ Notes:
 - 
 '''
 
-class ChannelEmbedding(nn.module):
-    def __init__(self, input_dim, model_dim):
-        super(ChannelEmbedding, self).__init__()
-        self.channel_embedding = nn.Linear(input_dim, model_dim)
-
-    def forward(self, x):
-        # x: [B, T, C]
-        B, T, C = x.shape
-        channel_indices = torch.arange(C, device=x.device).float()  # [C]
-        channel_indices = channel_indices.unsqueeze(0).unsqueeze(0).expand(B, T, C)  # [B, T, C]
-        channel_embedded = self.channel_embedding(channel_indices)  # [B, T, model_dim]
-        return x + channel_embedded
-
-
 # Bidirectional LSTM Autoencoder Model w/ attention
 class Encoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout, model_dim=None):
+    def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout):
         super().__init__()
-        if model_dim is None:
-            model_dim = input_size  # fallback to raw dim
-        
-        self.channel_embedding = ChannelEmbedding(input_size, model_dim)
 
         self.lstm = nn.LSTM(
-            input_size=model_dim,
+            input_size=input_size,
             hidden_size=hidden_size,
             num_layers=num_layers,
             batch_first=True,
             dropout=dropout,
             bidirectional=True
         )
-        self.attention = nn.Linear(hidden_size * 2, 1)
-        self.fc_latent = nn.Linear(hidden_size * 2, latent_size)
 
-    def forward(self, x):  # x: [B, T, C]
-        x = self.channel_embedding(x)  # [B, T, model_dim]
-        out, _ = self.lstm(x)
-        attn_scores = self.attention(out)
-        attn_weights = torch.softmax(attn_scores, 1)
-        context = torch.sum(attn_weights * out, dim=1)
-        latent = self.fc_latent(context)
+        self.attention = nn.Linear(hidden_size * 2, 1)
+
+        # Let's try a projection layer to get to latent size!!!
+        self.proj = nn.Sequential(
+            nn.Linear(hidden_size * 2, hidden_size * 2),
+            nn.ReLU(),  # Try SiLU or GELU later
+            nn.Linear(hidden_size * 2, latent_size)
+        )
+
+    def forward(self, x):
+        out, _ = self.lstm(x)  # [batch, time, hidden_size*2]
+
+        attn_scores = self.attention(out)               # [batch, time, 1]
+        attn_weights = torch.softmax(attn_scores, dim=1)
+        context = torch.sum(attn_weights * out, dim=1)  # [batch, hidden_size*2]
+
+        latent = self.proj(context)                     # [batch, latent_size]
         return latent, attn_weights
+
 
 
 class Decoder(nn.Module):
@@ -161,9 +152,9 @@ class Decoder(nn.Module):
 
 
 class BiLSTMAutoencoder(nn.Module):
-    def __init__(self, input_size, hidden_size, num_layers, latent_size, seq_len, dropout, model_dim):
+    def __init__(self, input_size, hidden_size, num_layers, latent_size, seq_len, dropout):
         super().__init__()
-        self.encoder = Encoder(input_size, hidden_size, num_layers, latent_size, dropout, model_dim)
+        self.encoder = Encoder(input_size, hidden_size, num_layers, latent_size, dropout)
         self.decoder = Decoder(latent_size, hidden_size, num_layers, input_size, seq_len)
 
     def forward(self, x):
@@ -180,9 +171,9 @@ hidden_dim      = 16       # LSTM hidden state size
 latent_dim      = 64       # Size of latent representation (embedding)
 num_layers      = 2        # Number of LSTM layers
 dropout         = 0.4      # Dropout between LSTM layers
-batch_size      = 16       # Number of GRBs per batch
-num_epochs      = 20       # Training epochs
-learning_rate   = 0.00012  # Optimizer learning rate
+batch_size      = 32       # Number of GRBs per batch
+num_epochs      = 15       # Training epochs
+learning_rate   = 0.00022  # Optimizer learning rate
 sequence_length = np.shape(time_series_list)[1]  # Timesteps per GRB
 
 
@@ -212,6 +203,7 @@ for epoch in range(num_epochs):
         reconstructed, _, _ = model(batch)
         loss = criterion(reconstructed, batch)
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=0.25)
         optimizer.step()
         scheduler.step(loss)
 
