@@ -190,7 +190,7 @@ class BiLSTMAutoencoder(nn.Module):
 input_dim       = 14       # Number of detectors (features per timestep)
 hidden_dim      = 16       # LSTM hidden state size
 latent_dim      = 64       # Size of latent representation (embedding)
-num_layers      = 3        # Number of LSTM layers
+num_layers      = 2        # Number of LSTM layers
 dropout         = 0.4      # Dropout between LSTM layers
 batch_size      = 32       # Number of GRBs per batch
 num_epochs      = 15       # Training epochs
