@@ -1,4 +1,4 @@
-# 1.7 - Rolled back to 1.2 before making changes. Increased batch size 16 -> 32, epochs 20 -> 15, and added gradient clipping with max_norm=0.25.
+# 2.0 - Rolled back to 1.8 and increased layers from 2 --> 3
 
 import numpy as np
 import pandas as pd
@@ -169,7 +169,7 @@ class BiLSTMAutoencoder(nn.Module):
 input_dim       = 14       # Number of detectors (features per timestep)
 hidden_dim      = 16       # LSTM hidden state size
 latent_dim      = 64       # Size of latent representation (embedding)
-num_layers      = 2        # Number of LSTM layers
+num_layers      = 3        # Number of LSTM layers
 dropout         = 0.4      # Dropout between LSTM layers
 batch_size      = 32       # Number of GRBs per batch
 num_epochs      = 15       # Training epochs

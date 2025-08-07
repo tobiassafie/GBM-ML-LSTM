@@ -1,4 +1,4 @@
-# 1.9 - Added a projection layer to the Encoder class
+# 1.9 - Removed projection layer, added multi-headed attention
 
 import numpy as np
 import pandas as pd
