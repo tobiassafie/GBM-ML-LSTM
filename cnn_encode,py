@@ -1,0 +1,58 @@
+# CNN Autoencoder
+# Version 1.0
+# Will try with layer masking later
+import numpy as np
+import pandas as pd
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import Dataset, DataLoader
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
+import sys
+sys.path.append("C:/Users/tobys/Downloads/GBM-ML-main/GBM-ML-main")
+
+'''
+This section is copied from the original encode.py script.
+This is all of our data loading and processing.
+'''
+
+# Process data
+lcs = pd.read_csv('lcs.csv')
+channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b0', 'b1']
+
+# Fill missing channels with noise
+for channel in channels: 
+    missing_indices = lcs[channel].isnull()  
+    num_missing = missing_indices.sum()
+    noise = np.random.normal(loc=lcs[channel].mean(), scale=lcs[channel].std(), size=num_missing)  
+    lcs.loc[missing_indices, channel] = noise   
+
+time_series_list = []
+burst_ids = []
+grouped = lcs.groupby('burst')
+for burst, group in grouped:
+    time_series_data = group[channels].values
+    time_series_tensor = torch.tensor(time_series_data, dtype=torch.float32)
+    time_series_list.append(time_series_tensor)
+    burst_ids.append(burst)
+
+# Padding with zeros
+time_series_list = nn.utils.rnn.pad_sequence(time_series_list, batch_first=True, padding_value=0.0)
+
+# Normalize the light curves
+scaler = StandardScaler()
+time_series_list_2d = time_series_list.reshape(time_series_list.shape[0], -1)
+time_series_list_2d = scaler.fit_transform(time_series_list_2d)
+time_series_list = time_series_list_2d.reshape(time_series_list.shape)
+time_series_list = torch.tensor(time_series_list, dtype=torch.float32)  # <-- Add this line
+
+# Dataset Class
+class GRBDataset(Dataset):
+    def __init__(self, data):
+        self.data = data
+    def __len__(self):
+        return len(self.data)
+    def __getitem__(self, idx):
+        return self.data[idx]
+    

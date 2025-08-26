@@ -1,4 +1,4 @@
-# 2.1 - Rolled back to 1.3 and am trying a channel embedding
+# 1.3 - 20 epochs instead of 15 and used new learning rate from hyperparam sweeps
 
 import numpy as np
 import pandas as pd
@@ -93,25 +93,10 @@ Notes:
 - 
 '''
 
-class ChannelEmbedding(nn.Module):
-    def __init__(self, input_dim):
-        super(ChannelEmbedding, self).__init__()
-        self.channel_embedding = nn.Linear(input_dim, input_dim)
-
-    def forward(self, x):
-        # x: [B, T, C]
-        B, T, C = x.shape
-        channel_indices = torch.arange(C, device=x.device).float()  # [C]
-        channel_indices = channel_indices.unsqueeze(0).unsqueeze(0).expand(B, T, C)  # [B, T, C]
-        channel_embedded = self.channel_embedding(channel_indices)  # [B, T, model_dim]
-        return x + channel_embedded
-
-
 # Bidirectional LSTM Autoencoder Model w/ attention
 class Encoder(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout):
         super().__init__()
-        self.channel_embedding = ChannelEmbedding(input_size)
         self.lstm = nn.LSTM(
             input_size=input_size,
             hidden_size=hidden_size,
@@ -121,16 +106,17 @@ class Encoder(nn.Module):
             bidirectional=True
         )
         self.attention = nn.Linear(hidden_size * 2, 1)
-        self.fc_latent = nn.Linear(hidden_size * 2, latent_size)
+        self.fc_latent = nn.Linear(hidden_size * 2, latent_size)  # compress to latent
 
-    def forward(self, x):  # x: [B, T, C]
-        x = self.channel_embedding(x)  # [B, T, model_dim]
-        out, _ = self.lstm(x)
-        attn_scores = self.attention(out)
-        attn_weights = torch.softmax(attn_scores, 1)
-        context = torch.sum(attn_weights * out, dim=1)
-        latent = self.fc_latent(context)
-        return latent, attn_weights
+    def forward(self, x):
+        out, _ = self.lstm(x)  # out: [batch, time, hidden_size*2]
+
+        attn_scores = self.attention(out)              # [batch, time, 1]
+        attn_weights = torch.softmax(attn_scores, 1)   # normalize over time
+        context = torch.sum(attn_weights * out, dim=1) # [batch, hidden_size*2]
+
+        latent = self.fc_latent(context)               # [batch, latent_size]
+        return latent, attn_weights                    # return latent features (what we're trying to extract) + attention weights
 
 
 class Decoder(nn.Module):
