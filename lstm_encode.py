@@ -1,4 +1,4 @@
-# 2.1 - Rolled back to 1.3 and am trying a channel embedding
+# 2.2 - Trying a channel embedding w/ masked 
 
 import numpy as np
 import pandas as pd
@@ -20,79 +20,78 @@ This is all of our data loading and processing.
 lcs = pd.read_csv('lcs.csv')
 channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b0', 'b1']
 
-# Fill missing channels with noise
-for channel in channels: 
-    missing_indices = lcs[channel].isnull()  
-    num_missing = missing_indices.sum()
-    noise = np.random.normal(loc=lcs[channel].mean(), scale=lcs[channel].std(), size=num_missing)  
-    lcs.loc[missing_indices, channel] = noise   
+# MASK --- instead of filling with noise, binary mask NaNs
+
+# 1) Presence mask (1 = observed, 0 = missing)
+for c in channels:
+    lcs[c + "_mask"] = (~lcs[c].isna()).astype(float)
+
+# 2) Per-channel standardization using only observed values
+for c in channels:
+    mu = lcs[c].mean(skipna=True)
+    sig = lcs[c].std(skipna=True)
+    # Standardize observed entries; leave NaNs as NaN
+    lcs[c] = (lcs[c] - mu) / (sig + 1e-8)
+
+# 3) Zero-impute *after* standardization (so 0 means "no signal provided")
+for c in channels:
+    lcs[c] = lcs[c].fillna(0.0)
 
 time_series_list = []
+mask_series_list = []
 burst_ids = []
-grouped = lcs.groupby('burst')
-for burst, group in grouped:
-    time_series_data = group[channels].values
-    time_series_tensor = torch.tensor(time_series_data, dtype=torch.float32)
-    time_series_list.append(time_series_tensor)
+
+for burst, group in lcs.groupby('burst'):
+    X = group[channels].values                      # [T, C]
+    M = group[[c + "_mask" for c in channels]].values  # [T, C]
+    time_series_list.append(torch.tensor(X, dtype=torch.float32))
+    mask_series_list.append(torch.tensor(M, dtype=torch.float32))
     burst_ids.append(burst)
 
-# Padding with zeros
-time_series_list = nn.utils.rnn.pad_sequence(time_series_list, batch_first=True, padding_value=0.0)
+# Pad to common T with zeros for data and zeros for mask
+time_series_list = nn.utils.rnn.pad_sequence(time_series_list, batch_first=True, padding_value=0.0)  # [B,T,C]
+mask_series_list = nn.utils.rnn.pad_sequence(mask_series_list, batch_first=True, padding_value=0.0)  # [B,T,C]
 
-# Normalize the light curves
-scaler = StandardScaler()
-time_series_list_2d = time_series_list.reshape(time_series_list.shape[0], -1)
-time_series_list_2d = scaler.fit_transform(time_series_list_2d)
-time_series_list = time_series_list_2d.reshape(time_series_list.shape)
-time_series_list = torch.tensor(time_series_list, dtype=torch.float32)  # <-- Add this line
+# Convert to tensor (we already standardized per-channel pre-padding)
+time_series_list = torch.tensor(time_series_list, dtype=torch.float32)
+
 
 # Dataset Class
 class GRBDataset(Dataset):
-    def __init__(self, data):
+    def __init__(self, data, masks):
         self.data = data
+        self.masks = masks
     def __len__(self):
         return len(self.data)
     def __getitem__(self, idx):
-        return self.data[idx]
+        return self.data[idx], self.masks[idx]
     
 
 '''
 LSTM Autoencoder
 
-I read up on LSTMs and looked at actual code of LSTM implementation in the following places primarily: 
-- PyTorch Documentation https://pytorch.org/docs/stable/generated/torch.nn.LSTM.html
-- Geeks For Geeks Tutorial https://www.geeksforgeeks.org/deep-learning/long-short-term-memory-networks-using-pytorch/
-- PyTorch Forums About Encoding/Decoding w/ an LSTM https://discuss.pytorch.org/t/encoder-decoder-lstm-model-for-time-series-forecasting/189892/3
-
-I wrote the code generally systematically:
-- I built out the LSTM framework from the examples I found online.
-- I adapted them to GRB analysis from the Transformer encoder.py script written by Dr. Sravan.
-- I then began the process of training, testing clustering, and adding complexity to the architecture
-  such as attention and bidirectionality.
-- I am now in the process of sweeping and adding more complexity.
-
-Model Components:
-- Attention:
-    I added attention because, to my understanding, in each light curve the actual burst is far more useful to us than
-    the baseline from the noise. Attention lets the model weigh the parts of each light curve differently, and thus can add
-    more weight to the bursts rather than the noise. You can see it implemented in the Encoder Class.
-    Can be implemented better. The attention mechanism is currently a singular linear layer rather than a multi-head or some other
-    more complex attention component.
-- Bidirectionality:
-    This was much easier to implement. Rather than adding attention layers, we can simply enable bidirectionality in the
-    PyTorch LSTM arguments. So convenient! This makes the model process each light curve forwards and backwards and, I think that
-    will lead to better reconstruction and clustering.
-
-Notes:
-- There is no intermediate network.
-- Dropout has yet to be tuned.
-- Could use a more complex decoder.
-- Could use a more robust attention mechanism.
-- Could use a more explicit regularization method than dropout alone.
-- I have not tried a Time-Aware LSTM yet (will require a new preprocessing script).
+Features:
+- Bidirectional
+- Attention
+- Scheduler --> Reduce on Plateau
+- Channel Embedding
+- Channel Mask w/ stem
 - 
 '''
 
+# Input stem - Allows the model to identify the difference between masked and nonmasked channels
+class InputStem(nn.Module):
+    def __init__(self, C):
+        super().__init__()
+        # Compress [x, mask] of size 2C back down to C
+        self.proj = nn.Linear(2 * C, C)
+
+    def forward(self, x, m):
+        # Concatenate along last dim: [B,T,C] + [B,T,C] -> [B,T,2C]
+        combined = torch.cat([x, m], dim=-1)
+        return self.proj(combined)  # [B,T,C]
+
+# Channel embedding -- allows the model to identify each channel for better learning
 class ChannelEmbedding(nn.Module):
     def __init__(self, input_dim):
         super(ChannelEmbedding, self).__init__()
@@ -111,6 +110,7 @@ class ChannelEmbedding(nn.Module):
 class Encoder(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, latent_size, dropout):
         super().__init__()
+        self.stem = InputStem(input_size)
         self.channel_embedding = ChannelEmbedding(input_size)
         self.lstm = nn.LSTM(
             input_size=input_size,
@@ -123,15 +123,15 @@ class Encoder(nn.Module):
         self.attention = nn.Linear(hidden_size * 2, 1)
         self.fc_latent = nn.Linear(hidden_size * 2, latent_size)
 
-    def forward(self, x):  # x: [B, T, C]
-        x = self.channel_embedding(x)  # [B, T, model_dim]
+    def forward(self, x, m):  # note: takes both x and mask
+        x = self.stem(x, m)                # integrate mask → [B,T,C]
+        x = self.channel_embedding(x)      # add channel embedding
         out, _ = self.lstm(x)
         attn_scores = self.attention(out)
         attn_weights = torch.softmax(attn_scores, 1)
         context = torch.sum(attn_weights * out, dim=1)
         latent = self.fc_latent(context)
         return latent, attn_weights
-
 
 class Decoder(nn.Module):
     def __init__(self, latent_size, hidden_size, num_layers, output_size, seq_len):
@@ -162,8 +162,8 @@ class BiLSTMAutoencoder(nn.Module):
         self.encoder = Encoder(input_size, hidden_size, num_layers, latent_size, dropout)
         self.decoder = Decoder(latent_size, hidden_size, num_layers, input_size, seq_len)
 
-    def forward(self, x):
-        latent, attn_weights = self.encoder(x)
+    def forward(self, x, m):
+        latent, attn_weights = self.encoder(x, m)
         reconstructed = self.decoder(latent)
         return reconstructed, latent, attn_weights
     
@@ -197,16 +197,20 @@ optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=3, factor=0.5)
 
 # Get data
-dataset = GRBDataset(time_series_list)
+dataset   = GRBDataset(time_series_list, mask_series_list)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # Training loop
 for epoch in range(num_epochs):
-    for i, batch in enumerate(dataloader):
-        batch = batch.float()
+    for i, (batch, batch_mask) in enumerate(dataloader):
+        batch, batch_mask = batch.float(), batch_mask.float()
         optimizer.zero_grad()
-        reconstructed, _, _ = model(batch)
-        loss = criterion(reconstructed, batch)
+        reconstructed, _, _ = model(batch, batch_mask)
+
+        # Masked loss
+        se = (reconstructed - batch) ** 2 * batch_mask
+        loss = se.sum() / (batch_mask.sum() + 1e-8)
+
         loss.backward()
         optimizer.step()
         scheduler.step(loss)
@@ -220,8 +224,8 @@ for epoch in range(num_epochs):
 model.eval()
 latent_feats = []
 with torch.no_grad():
-    for batch in dataloader:
-        _, latent, _ = model(batch)
+    for batch, batch_mask in dataloader:
+        _, latent, _ = model(batch, batch_mask)
         latent_feats.append(latent.numpy())
 
 latent_feats = np.concatenate(latent_feats, axis=0)
