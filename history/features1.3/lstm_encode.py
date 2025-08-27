@@ -44,7 +44,7 @@ scaler = StandardScaler()
 time_series_list_2d = time_series_list.reshape(time_series_list.shape[0], -1)
 time_series_list_2d = scaler.fit_transform(time_series_list_2d)
 time_series_list = time_series_list_2d.reshape(time_series_list.shape)
-time_series_list = torch.tensor(time_series_list, dtype=torch.float32)  # <-- Add this line
+time_series_list = torch.tensor(time_series_list, dtype=torch.float32)
 
 # Dataset Class
 class GRBDataset(Dataset):

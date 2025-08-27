@@ -1,0 +1,13 @@
+{"time":"2025-08-26T22:37:22.7406745-04:00","level":"INFO","msg":"stream: starting","core version":"0.21.0"}
+{"time":"2025-08-26T22:37:22.9926263-04:00","level":"INFO","msg":"stream: created new stream","id":"vaw420y7"}
+{"time":"2025-08-26T22:37:22.993157-04:00","level":"INFO","msg":"stream: started","id":"vaw420y7"}
+{"time":"2025-08-26T22:37:22.993157-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"vaw420y7"}
+{"time":"2025-08-26T22:37:22.993157-04:00","level":"INFO","msg":"handler: started","stream_id":"vaw420y7"}
+{"time":"2025-08-26T22:37:22.993157-04:00","level":"INFO","msg":"sender: started","stream_id":"vaw420y7"}
+{"time":"2025-08-26T22:47:17.8528654-04:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-08-26T22:47:18.0028535-04:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-08-26T22:47:18.0164151-04:00","level":"INFO","msg":"stream: closing","id":"vaw420y7"}
+{"time":"2025-08-26T22:47:18.0164151-04:00","level":"INFO","msg":"sender: closed","stream_id":"vaw420y7"}
+{"time":"2025-08-26T22:47:18.0169246-04:00","level":"INFO","msg":"handler: closed","stream_id":"vaw420y7"}
+{"time":"2025-08-26T22:47:18.0169246-04:00","level":"INFO","msg":"writer: Close: closed","stream_id":"vaw420y7"}
+{"time":"2025-08-26T22:47:18.0169246-04:00","level":"INFO","msg":"stream: closed","id":"vaw420y7"}

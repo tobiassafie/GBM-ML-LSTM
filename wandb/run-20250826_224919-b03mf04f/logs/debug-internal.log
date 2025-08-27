@@ -1,0 +1,12 @@
+{"time":"2025-08-26T22:49:19.9476439-04:00","level":"INFO","msg":"stream: starting","core version":"0.21.0"}
+{"time":"2025-08-26T22:49:20.1699171-04:00","level":"INFO","msg":"stream: created new stream","id":"b03mf04f"}
+{"time":"2025-08-26T22:49:20.1699171-04:00","level":"INFO","msg":"stream: started","id":"b03mf04f"}
+{"time":"2025-08-26T22:49:20.1699171-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"b03mf04f"}
+{"time":"2025-08-26T22:49:20.1699171-04:00","level":"INFO","msg":"handler: started","stream_id":"b03mf04f"}
+{"time":"2025-08-26T22:49:20.1699171-04:00","level":"INFO","msg":"sender: started","stream_id":"b03mf04f"}
+{"time":"2025-08-27T08:27:30.3462406-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-mask-architecture-2/b03mf04f/file_stream\": net/http: request canceled (Client.Timeout exceeded while awaiting headers)"}
+{"time":"2025-08-27T08:27:32.7420751-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-mask-architecture-2/b03mf04f/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-27T08:27:45.6869257-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-27T08:27:45.6869257-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-mask-architecture-2/b03mf04f/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-27T08:27:59.9486599-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/files/tobiassafie-drexel-university/GBM-LSTM-mask-architecture-2/b03mf04f/file_stream\": dial tcp: lookup api.wandb.ai: no such host"}
+{"time":"2025-08-27T08:27:59.9486599-04:00","level":"INFO","msg":"api: retrying error","error":"Post \"https://api.wandb.ai/graphql\": dial tcp: lookup api.wandb.ai: no such host"}
