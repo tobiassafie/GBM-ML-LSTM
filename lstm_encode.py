@@ -93,17 +93,20 @@ class InputStem(nn.Module):
 
 # Channel embedding -- allows the model to identify each channel for better learning
 class ChannelEmbedding(nn.Module):
-    def __init__(self, input_dim):
-        super(ChannelEmbedding, self).__init__()
-        self.channel_embedding = nn.Linear(input_dim, input_dim)
+    def __init__(self, C):
+        super().__init__()
+        # start as near-identity so it won't distort training early
+        self.scale      = nn.Parameter(torch.ones(1, 1, C))   # multiplicative per-channel
+        self.bias       = nn.Parameter(torch.zeros(1, 1, C))  # additive per-channel
+        self.miss_bias  = nn.Parameter(torch.zeros(1, 1, C))  # only applied when channel is missing
 
-    def forward(self, x):
-        # x: [B, T, C]
-        B, T, C = x.shape
-        channel_indices = torch.arange(C, device=x.device).float()  # [C]
-        channel_indices = channel_indices.unsqueeze(0).unsqueeze(0).expand(B, T, C)  # [B, T, C]
-        channel_embedded = self.channel_embedding(channel_indices)  # [B, T, model_dim]
-        return x + channel_embedded
+    def forward(self, x, m):
+        # x, m: [B,T,C]; m ∈ {0,1}
+        x = x * self.scale + self.bias
+        # add a learned baseline only where the channel is missing
+        x = x + self.miss_bias * (1.0 - m)
+        return x
+
 
 
 # Bidirectional LSTM Autoencoder Model w/ attention
@@ -123,15 +126,15 @@ class Encoder(nn.Module):
         self.attention = nn.Linear(hidden_size * 2, 1)
         self.fc_latent = nn.Linear(hidden_size * 2, latent_size)
 
-    def forward(self, x, m):  # note: takes both x and mask
-        x = self.stem(x, m)                # integrate mask → [B,T,C]
-        x = self.channel_embedding(x)      # add channel embedding
+    def forward(self, x, m):
+        x = self.stem(x, m)
+        x = self.channel_embedding(x, m)
         out, _ = self.lstm(x)
-        attn_scores = self.attention(out)
-        attn_weights = torch.softmax(attn_scores, 1)
-        context = torch.sum(attn_weights * out, dim=1)
+        attn = torch.softmax(self.attention(out), dim=1)
+        context = (attn * out).sum(dim=1)
         latent = self.fc_latent(context)
-        return latent, attn_weights
+        return latent, attn
+
 
 class Decoder(nn.Module):
     def __init__(self, latent_size, hidden_size, num_layers, output_size, seq_len):
