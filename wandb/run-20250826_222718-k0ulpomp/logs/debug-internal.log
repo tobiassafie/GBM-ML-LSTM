@@ -1,0 +1,13 @@
+{"time":"2025-08-26T22:27:19.0196167-04:00","level":"INFO","msg":"stream: starting","core version":"0.21.0"}
+{"time":"2025-08-26T22:27:19.6821278-04:00","level":"INFO","msg":"stream: created new stream","id":"k0ulpomp"}
+{"time":"2025-08-26T22:27:19.6821278-04:00","level":"INFO","msg":"stream: started","id":"k0ulpomp"}
+{"time":"2025-08-26T22:27:19.6821278-04:00","level":"INFO","msg":"handler: started","stream_id":"k0ulpomp"}
+{"time":"2025-08-26T22:27:19.6821278-04:00","level":"INFO","msg":"writer: Do: started","stream_id":"k0ulpomp"}
+{"time":"2025-08-26T22:27:19.6821278-04:00","level":"INFO","msg":"sender: started","stream_id":"k0ulpomp"}
+{"time":"2025-08-26T22:35:37.0326768-04:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-08-26T22:35:37.1829654-04:00","level":"INFO","msg":"handler: operation stats","stats":{}}
+{"time":"2025-08-26T22:35:37.2073817-04:00","level":"INFO","msg":"stream: closing","id":"k0ulpomp"}
+{"time":"2025-08-26T22:35:37.2073817-04:00","level":"INFO","msg":"sender: closed","stream_id":"k0ulpomp"}
+{"time":"2025-08-26T22:35:37.2079306-04:00","level":"INFO","msg":"handler: closed","stream_id":"k0ulpomp"}
+{"time":"2025-08-26T22:35:37.2079306-04:00","level":"INFO","msg":"writer: Close: closed","stream_id":"k0ulpomp"}
+{"time":"2025-08-26T22:35:37.2079306-04:00","level":"INFO","msg":"stream: closed","id":"k0ulpomp"}

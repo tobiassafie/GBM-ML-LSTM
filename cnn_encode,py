@@ -19,20 +19,26 @@ This is all of our data loading and processing.
 
 # Process data
 lcs = pd.read_csv('lcs.csv')
-channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b0', 'b1']
+channels = ['n0','n1','n2','n3','n4','n5','n6','n7','n8','n9','na','nb','b0','b1']
 
 # Fill missing channels with noise
 for channel in channels: 
-    missing_indices = lcs[channel].isnull()  
+    missing_indices = lcs[channel].isnull()
     num_missing = missing_indices.sum()
-    noise = np.random.normal(loc=lcs[channel].mean(), scale=lcs[channel].std(), size=num_missing)  
-    lcs.loc[missing_indices, channel] = noise   
+    if num_missing > 0:
+        mu  = lcs[channel].mean()
+        sig = lcs[channel].std()
+        if not np.isfinite(sig) or sig == 0:  # small guard
+            sig = 1e-8
+        noise = np.random.normal(loc=mu, scale=sig, size=num_missing)
+        lcs.loc[missing_indices, channel] = noise
 
 time_series_list = []
 burst_ids = []
-grouped = lcs.groupby('burst')
+grouped = lcs.groupby('burst')  # keep your variable name
+
 for burst, group in grouped:
-    time_series_data = group[channels].values
+    time_series_data = group[channels].values  # [T, C]
     time_series_tensor = torch.tensor(time_series_data, dtype=torch.float32)
     time_series_list.append(time_series_tensor)
     burst_ids.append(burst)
@@ -42,10 +48,9 @@ time_series_list = nn.utils.rnn.pad_sequence(time_series_list, batch_first=True,
 
 # Normalize the light curves
 scaler = StandardScaler()
-time_series_list_2d = time_series_list.reshape(time_series_list.shape[0], -1)
+time_series_list_2d = time_series_list.reshape(time_series_list.shape[0], -1).numpy()
 time_series_list_2d = scaler.fit_transform(time_series_list_2d)
-time_series_list = time_series_list_2d.reshape(time_series_list.shape)
-time_series_list = torch.tensor(time_series_list, dtype=torch.float32)  # <-- Add this line
+time_series_list = torch.tensor(time_series_list_2d.reshape(time_series_list.shape), dtype=torch.float32)
 
 # Dataset Class
 class GRBDataset(Dataset):
@@ -56,3 +61,98 @@ class GRBDataset(Dataset):
     def __getitem__(self, idx):
         return self.data[idx]
     
+'''
+This is another autencoder, mirroring our LSTM design but with a CNN this time.
+
+'''
+
+class Encoder(nn.Module):
+    def __init__(self, in_ch, base_ch, num_layers, dropout):
+        super().__init__()
+        blocks = []
+        c_in = in_ch
+        c = base_ch
+        for _ in range(num_layers):
+            blocks += [
+                nn.Conv1d(c_in, c, kernel_size=5, stride=2, padding=2),
+                nn.BatchNorm1d(c),
+                nn.ReLU(inplace=True),
+                nn.Dropout(dropout),
+            ]
+            c_in = c
+            c = min(c * 2, 512)  # optional cap on width growth
+        self.conv = nn.Sequential(*blocks)
+        self.feat_ch = c_in
+        self.gap = nn.AdaptiveAvgPool1d(1)   # -> [B, feat_ch, 1]
+        self.to_latent = nn.Linear(self.feat_ch, latent_dim)
+
+    def forward(self, x_btc):               # x_btc: [B,T,C]
+        x = x_btc.permute(0,2,1)            # -> [B,C,T]
+        f = self.conv(x)                    # [B, feat_ch, T']
+        pooled = self.gap(f).squeeze(-1)    # [B, feat_ch]
+        z = self.to_latent(pooled)          # [B, latent_dim]
+        return z, f
+    
+
+class Decoder(nn.Module):
+    def __init__(self, feat_ch, out_ch, num_layers, dropout, seq_len):
+        super().__init__()
+        self.seq_len = seq_len
+        self.num_layers = num_layers
+
+        # length after encoder
+        self.seed_len = max(1, math.ceil(seq_len / (2 ** num_layers)))
+        self.from_latent = nn.Linear(latent_dim, feat_ch * self.seed_len)
+
+        ups = []
+        c_in = feat_ch
+        c = max(feat_ch // 2, out_ch)
+        for _ in range(num_layers):
+            ups += [
+                nn.Upsample(scale_factor=2, mode='nearest'),
+                nn.Conv1d(c_in, max(c, out_ch), kernel_size=3, padding=1),
+                nn.BatchNorm1d(max(c, out_ch)),
+                nn.ReLU(inplace=True),
+                nn.Dropout(dropout),
+            ]
+            c_in = max(c, out_ch)
+            c = max(c // 2, out_ch)
+        self.up = nn.Sequential(*ups)
+        self.head = nn.Conv1d(c_in, out_ch, kernel_size=3, padding=1)
+
+    def forward(self, z):                     # z: [B, latent_dim]
+        B = z.size(0)
+        seed = self.from_latent(z).view(B, -1, self.seed_len)  # [B, feat_ch, seed_len]
+        x = self.up(seed)                     # [B, ~feat_ch, ~T]
+        x = self.head(x)                      # [B, C, L~]
+        L = x.shape[-1]
+        if L > self.seq_len: x = x[..., :self.seq_len]
+        elif L < self.seq_len: x = nn.functional.pad(x, (0, self.seq_len - L))
+        return x.permute(0,2,1)              # -> [B,T,C]
+
+
+class CNNAutoencoder(nn.Module):
+    def __init__(self, input_size, base_ch, num_layers, dropout, seq_len):
+        super().__init__()
+        self.encoder = Encoder(input_size, base_ch, num_layers, dropout)
+        self.decoder = Decoder(self.encoder.feat_ch, input_size, num_layers, dropout, seq_len)
+
+    def forward(self, x_btc):
+        z, _ = self.encoder(x_btc)
+        recon = self.decoder(z)
+        return recon, z
+    
+
+input_dim       = 14          # 14 detectors
+latent_dim      = 64
+base_channels   = 64         # width of the first conv block
+num_layers      = 3          # <-- your depth knob
+dropout         = 0.2
+batch_size      = 16
+num_epochs      = 20
+learning_rate   = 1.2e-4
+sequence_length = T
+
+loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+

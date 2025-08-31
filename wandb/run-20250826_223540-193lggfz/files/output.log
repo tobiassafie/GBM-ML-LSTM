@@ -1,0 +1,9 @@
+c:\Users\tobys\anaconda3\envs\star-pinn\lib\site-packages\torch\nn\modules\rnn.py:123: UserWarning: dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1, but got dropout=0.4 and num_layers=1
+  warnings.warn(
+Epoch 1, Final batch loss: 0.3688
+Epoch 2, Final batch loss: 0.3326
+Epoch 3, Final batch loss: 0.3443
+Epoch 4, Final batch loss: 0.5900
+Epoch 5, Final batch loss: 14.6104
+Epoch 6, Final batch loss: 0.2392
+Epoch 7, Final batch loss: 0.2534
