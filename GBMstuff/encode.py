@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+from torch.optim.lr_scheduler import LambdaLR, CosineAnnealingLR
 
 lcs = pd.read_csv('lcs.csv')
 channels = ['n0', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'n7', 'n8', 'n9', 'na', 'nb', 'b0', 'b1']
@@ -35,6 +36,7 @@ scaler = StandardScaler()
 time_series_list_2d = time_series_list.reshape(time_series_list.shape[0], -1)
 time_series_list_2d = scaler.fit_transform(time_series_list_2d)
 time_series_list = time_series_list_2d.reshape(time_series_list.shape)
+time_series_list = torch.tensor(time_series_list, dtype=torch.float32)  # Ensure tensor type
 
 class TimeSeriesDataset(Dataset):
     def __init__(self, time_series_list, burst_ids):
@@ -158,22 +160,46 @@ num_epochs = 50
 learning_rate = 0.0001
 dropout = 0.1
 sequence_length = np.shape(time_series_list)[1]
+
+autoencoder = TransformerAutoencoder(
+                                    input_dim, 
+                                    model_dim, 
+                                    num_heads, 
+                                    num_layers, 
+                                    sequence_length, 
+                                    reduced_dim, 
+                                    dropout=dropout)
+
+# Device configuration
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Define the loss function and optimizer
 criterion = nn.MSELoss()
 optimizer = optim.Adam(autoencoder.parameters(), lr=learning_rate)
+
+# Warmup + Cosine Annealing Scheduler
+warmup_epochs = 5
+total_epochs = num_epochs
+
+def lr_lambda(current_epoch):
+    if current_epoch < warmup_epochs:
+        return float(current_epoch + 1) / float(warmup_epochs)
+    return 0.5 * (1 + math.cos(math.pi * (current_epoch - warmup_epochs) / (total_epochs - warmup_epochs)))
+
+scheduler = LambdaLR(optimizer, lr_lambda=lr_lambda)
 
 dataset = TimeSeriesDataset(time_series_list, burst_ids)
 dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 # Initialize the autoencoder
-autoencoder = TransformerAutoencoder(input_dim, model_dim, num_heads, num_layers, sequence_length, reduced_dim, dropout=dropout)
+autoencoder = TransformerAutoencoder(input_dim, model_dim, num_heads, num_layers, sequence_length, reduced_dim, dropout=dropout).to(device)
 
 # Training 
 for epoch in range(num_epochs):
     for batch_idx, (batch, bursts) in enumerate(dataloader):
         # Original shape of batch: (batch_size, sequence_length, input_dim)
         # Permute to shape: (sequence_length, batch_size, input_dim)
-        batch = batch.permute(1, 0, 2).float()
+        batch = batch.permute(1, 0, 2).float().to(device)
         reconstructed, latent = autoencoder(batch)
         loss = criterion(reconstructed, batch)
 
@@ -181,20 +207,22 @@ for epoch in range(num_epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}')
+    scheduler.step()
 
-torch.save(autoencoder, 'autoencoder.pt')
-#torch.load('autoencoder.pt', weights_only=False, map_location=torch.device('cpu'))
+torch.save(autoencoder.state_dict(), 'autoencoder.pt')
+# To load: autoencoder.load_state_dict(torch.load('autoencoder.pt', map_location=device))
 
 # Inference 
 latent_feats = np.empty((0, reduced_dim))
 burst_list = np.empty((0,))
-for batch_idx, (batch, bursts) in enumerate(dataloader):
-    batch = batch.permute(1, 0, 2).float()
-    reconstructed, latent = autoencoder(batch)
-    latent_feats = np.concatenate([latent_feats, latent.cpu().detach().numpy()], axis=0)
-    burst_list = np.concatenate([burst_list, bursts])
+autoencoder.eval()
+with torch.no_grad():
+    for batch_idx, (batch, bursts) in enumerate(dataloader):
+        batch = batch.permute(1, 0, 2).float().to(device)
+        reconstructed, latent = autoencoder(batch)
+        latent_feats = np.concatenate([latent_feats, latent.cpu().detach().numpy()], axis=0)
+        burst_list = np.concatenate([burst_list, bursts])
 
 latent_feats = latent_feats.reshape(-1, latent_feats.shape[1])
 np.save('latent_feats.npy', latent_feats)
